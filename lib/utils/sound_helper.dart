@@ -41,23 +41,19 @@ class SoundHelper {
     if (Prefs.getBool('ticks')) _soundpool.play(_tickId);
   }
 
-  static void playDouble() {
-    if (useSound) {
-      _soundpool.play(_beepLowId);
-      Future.delayed(const Duration(milliseconds: 200))
-          .then((value) => _soundpool.play(_beepLowId));
-    }
+  static Future<void> playDouble() async {
+    if (!useSound) return;
+    _soundpool.play(_beepLowId);
+    await Future.delayed(const Duration(milliseconds: 200));
+    _soundpool.play(_beepLowId);
   }
 
-  static void playTriple() {
-    if (useSound) {
-      _soundpool.play(_beepHighId);
-      Future.delayed(const Duration(milliseconds: 150))
-          .then((value) => _soundpool.play(_beepHighId))
-          .then(
-            (value) => Future.delayed(const Duration(milliseconds: 150))
-                .then((value) => _soundpool.play(_beepHighId)),
-          );
-    }
+  static Future<void> playTriple() async {
+    if (!useSound) return;
+    _soundpool.play(_beepHighId);
+    await Future.delayed(const Duration(milliseconds: 150));
+    _soundpool.play(_beepHighId);
+    await Future.delayed(const Duration(milliseconds: 150));
+    _soundpool.play(_beepHighId);
   }
 }
