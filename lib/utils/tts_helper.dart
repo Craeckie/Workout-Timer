@@ -109,7 +109,7 @@ class TTSHelper {
     await Prefs.setString('sound', 'beep');
   }
 
-  static void setLanguage(String languageCode) async {
+  static Future<void> setLanguage(String languageCode) async {
     if (!available) return;
     Prefs.setString("tts_lang", languageCode);
     await flutterTts.setLanguage(languageCode);
@@ -120,7 +120,7 @@ class TTSHelper {
     await flutterTts.setVoice({"name": ttsVoice, "locale": languageCode});
   }
 
-  static void speak(String text) async {
+  static Future<void> speak(String text) async {
     if (!useTTS) return;
     await flutterTts.speak(text);
   }

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -70,12 +71,12 @@ Future<int> importFile(bool fromBackup) async {
       // Therefore loading is tried again with 'allowMalformed' flag.
       var bytes = await file.readAsBytes();
       content = utf8.decode(bytes, allowMalformed: true);
-      // TODO: What to do here? Log error? Show warning?
+      Fluttertoast.showToast(msg: 'Warning: file encoding was corrupted');
     }
 
     if (fromBackup) {
       var workouts = Backup.fromJson(jsonDecode(content)).workouts;
-      workouts.forEach((w) => writeWorkout(w, fixDuplicates: true));
+      await Future.wait(workouts.map((w) => writeWorkout(w, fixDuplicates: true)));
       await Migrations.runMigrations();
       return Future.value(workouts.length);
     } else {

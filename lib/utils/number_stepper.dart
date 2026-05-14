@@ -6,9 +6,8 @@ import '../generated/l10n.dart';
 import 'utils.dart';
 
 /// display a value with + and - buttons
-// ignore: must_be_immutable
 class NumberStepper extends StatefulWidget {
-  NumberStepper({
+  const NumberStepper({
     super.key,
     required this.lowerLimit,
     required this.upperLimit,
@@ -21,7 +20,7 @@ class NumberStepper extends StatefulWidget {
   final int lowerLimit;
   final int upperLimit;
   final double iconSize = 16;
-  int value;
+  final int value;
   final ValueChanged<int> valueChanged;
   final bool formatNumber;
   final bool largeSteps;
@@ -33,11 +32,21 @@ class NumberStepper extends StatefulWidget {
 class CustomStepperState extends State<NumberStepper> {
   bool _isEditingText = false;
   late TextEditingController _editingController;
+  late int _value;
 
   @override
   void initState() {
     super.initState();
-    _editingController = TextEditingController(text: widget.value.toString());
+    _value = widget.value;
+    _editingController = TextEditingController(text: _value.toString());
+  }
+
+  @override
+  void didUpdateWidget(NumberStepper oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value) {
+      _value = widget.value;
+    }
   }
 
   @override
@@ -48,8 +57,7 @@ class CustomStepperState extends State<NumberStepper> {
 
   Widget _editableTextField() {
     if (_isEditingText) {
-      _editingController.value =
-          TextEditingValue(text: widget.value.toString());
+      _editingController.value = TextEditingValue(text: _value.toString());
       return Center(
         child: SizedBox(
           width: 112,
@@ -57,20 +65,19 @@ class CustomStepperState extends State<NumberStepper> {
             maxLines: 1,
             maxLengthEnforcement: MaxLengthEnforcement.enforced,
             keyboardType: TextInputType.number,
-            //maxLength: 4,
             inputFormatters: [
               LengthLimitingTextInputFormatter(5),
               FilteringTextInputFormatter.digitsOnly,
             ],
             onSubmitted: (newValue) {
               setState(() {
-                var oldVal = widget.value;
+                var oldVal = _value;
                 try {
-                  widget.value = int.parse(newValue);
+                  _value = int.parse(newValue);
                 } on FormatException {
-                  widget.value = oldVal;
+                  _value = oldVal;
                 } finally {
-                  widget.valueChanged(widget.value);
+                  widget.valueChanged(_value);
                   _isEditingText = false;
                 }
               });
@@ -90,7 +97,7 @@ class CustomStepperState extends State<NumberStepper> {
       },
       child: NumberPicker(
         itemHeight: 32,
-        value: widget.value,
+        value: _value,
         minValue: widget.lowerLimit,
         step: 10,
         itemCount: 3,
@@ -100,7 +107,7 @@ class CustomStepperState extends State<NumberStepper> {
         textMapper: (value) => Utils.formatSeconds(int.parse(value)),
         onChanged: (value) {
           setState(() {
-            widget.value = value;
+            _value = value;
             widget.valueChanged(value);
           });
         },
@@ -111,7 +118,6 @@ class CustomStepperState extends State<NumberStepper> {
   @override
   Widget build(BuildContext context) => widget.largeSteps
       ? Container(
-          //width: widget.iconSize*2,
           padding: const EdgeInsets.symmetric(horizontal: 4),
           child: _editableTextField(),
         )
@@ -122,17 +128,17 @@ class CustomStepperState extends State<NumberStepper> {
               icon: const Icon(Icons.remove),
               onPressed: () {
                 setState(() {
-                  widget.value = widget.value == widget.lowerLimit
+                  _value = _value == widget.lowerLimit
                       ? widget.lowerLimit
-                      : widget.value -= 1;
+                      : _value - 1;
                 });
-                widget.valueChanged(widget.value);
+                widget.valueChanged(_value);
               },
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Text(
-                '${widget.formatNumber ? Utils.formatSeconds(widget.value) : widget.value}',
+                '${widget.formatNumber ? Utils.formatSeconds(_value) : _value}',
                 style: TextStyle(
                   fontSize: widget.iconSize * 1.2,
                   fontWeight: FontWeight.bold,
@@ -144,11 +150,11 @@ class CustomStepperState extends State<NumberStepper> {
               icon: const Icon(Icons.add),
               onPressed: () {
                 setState(() {
-                  widget.value = widget.value == widget.upperLimit
+                  _value = _value == widget.upperLimit
                       ? widget.upperLimit
-                      : widget.value += 1;
+                      : _value + 1;
                 });
-                widget.valueChanged(widget.value);
+                widget.valueChanged(_value);
               },
             ),
           ],
