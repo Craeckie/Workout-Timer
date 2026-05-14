@@ -102,8 +102,27 @@ class Backup {
   @JsonKey(required: true)
   List<Workout> workouts;
 
-  Backup({required this.workouts});
+  // Nullable: backups from versions before history existed omit the key.
+  @JsonKey(includeIfNull: false)
+  List<HistoryEntry>? history;
+
+  Backup({required this.workouts, this.history});
 
   factory Backup.fromJson(Map<String, dynamic> json) => _$BackupFromJson(json);
   Map<String, dynamic> toJson() => _$BackupToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true)
+class HistoryEntry {
+  HistoryEntry({required this.title, required this.completedAt});
+
+  @JsonKey(required: true)
+  String title;
+
+  @JsonKey(required: true)
+  DateTime completedAt;
+
+  factory HistoryEntry.fromJson(Map<String, dynamic> json) =>
+      _$HistoryEntryFromJson(json);
+  Map<String, dynamic> toJson() => _$HistoryEntryToJson(this);
 }

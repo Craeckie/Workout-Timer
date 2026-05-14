@@ -202,5 +202,92 @@ void main() {
     test('fromJson — missing required workouts throws', () {
       expect(() => w.Backup.fromJson({}), throwsA(anything));
     });
+
+    test('history roundtrips through JSON', () {
+      final backup = w.Backup(
+        workouts: [w.Workout(title: 'A', sets: [])],
+        history: [
+          w.HistoryEntry(
+            title: 'A',
+            completedAt: DateTime.utc(2026, 1, 2, 3, 4, 5),
+          ),
+          w.HistoryEntry(
+            title: 'B',
+            completedAt: DateTime.utc(2026, 1, 3, 0, 0, 0),
+          ),
+        ],
+      );
+      final copy = w.Backup.fromJson(jsonDecode(jsonEncode(backup.toJson())));
+      expect(copy.history, isNotNull);
+      expect(copy.history!.length, 2);
+      expect(copy.history!.first.title, 'A');
+      expect(
+        copy.history!.first.completedAt.toUtc(),
+        DateTime.utc(2026, 1, 2, 3, 4, 5),
+      );
+    });
+
+    test('history omitted from JSON when null (back-compat with old backups)',
+        () {
+      final backup = w.Backup(workouts: [w.Workout(title: 'A', sets: [])]);
+      final json = backup.toJson();
+      expect(json.containsKey('history'), isFalse);
+    });
+
+    test('fromJson — backup without history field decodes (back-compat)', () {
+      final copy = w.Backup.fromJson({
+        'workouts': [
+          {'title': 'A', 'sets': []},
+        ],
+      });
+      expect(copy.history, isNull);
+      expect(copy.workouts.single.title, 'A');
+    });
+
+    test('byte roundtrip preserves umlauts (regression: .codeUnits bug)', () {
+      // Backups used to be written as `jsonEncode(...).codeUnits`, which
+      // truncates UTF-16 to bytes and produces Latin-1 for chars like ä/ö/ü.
+      // Re-reading those bytes as UTF-8 replaces them with U+FFFD. Exports
+      // must encode as proper UTF-8 so a UTF-8 read decodes them intact.
+      final backup = w.Backup(
+        workouts: [
+          w.Workout(
+            title: 'Liegestütz',
+            sets: [
+              w.Set(
+                exercises: [w.Exercise(name: 'Türziehen', duration: 30)],
+                repetitions: 1,
+              ),
+            ],
+          ),
+        ],
+      );
+
+      final bytes = utf8.encode(jsonEncode(backup.toJson()));
+      final decoded = w.Backup.fromJson(jsonDecode(utf8.decode(bytes)));
+
+      expect(decoded.workouts.first.title, 'Liegestütz');
+      expect(decoded.workouts.first.sets.first.exercises.first.name, 'Türziehen');
+      expect(utf8.decode(bytes), isNot(contains('�')));
+    });
+
+    test('legacy .codeUnits bytes are recoverable as Latin-1', () {
+      // Legacy export path: jsonEncode(...).codeUnits. For BMP chars <= 0xFF
+      // (German umlauts), this is exactly Latin-1 — invalid UTF-8, but
+      // round-trips losslessly through latin1.decode.
+      final original = w.Backup(
+        workouts: [w.Workout(title: 'Liegestütz Türziehen Maß', sets: [])],
+      );
+      final legacyBytes = jsonEncode(original.toJson()).codeUnits;
+
+      expect(
+        () => utf8.decode(legacyBytes),
+        throwsA(isA<FormatException>()),
+        reason: 'legacy bytes must not be valid UTF-8',
+      );
+
+      final recovered = w.Backup.fromJson(jsonDecode(latin1.decode(legacyBytes)));
+      expect(recovered.workouts.single.title, 'Liegestütz Türziehen Maß');
+    });
   });
 }
