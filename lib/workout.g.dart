@@ -16,8 +16,8 @@ Workout _$WorkoutFromJson(Map<String, dynamic> json) {
     sets: (json['sets'] as List<dynamic>?)
         ?.map((e) => Set.fromJson(e as Map<String, dynamic>))
         .toList(),
-    version: json['version'] as int? ?? 1,
-    position: json['position'] as int? ?? -1,
+    version: (json['version'] as num?)?.toInt() ?? 1,
+    position: (json['position'] as num?)?.toInt() ?? -1,
   );
 }
 
@@ -35,7 +35,7 @@ Set _$SetFromJson(Map<String, dynamic> json) {
   );
   return Set(
     id: json['id'] as String?,
-    repetitions: json['repetitions'] as int? ?? 1,
+    repetitions: (json['repetitions'] as num?)?.toInt() ?? 1,
     exercises: (json['exercises'] as List<dynamic>?)
         ?.map((e) => Exercise.fromJson(e as Map<String, dynamic>))
         .toList(),
@@ -56,7 +56,7 @@ Exercise _$ExerciseFromJson(Map<String, dynamic> json) {
   return Exercise(
     id: json['id'] as String?,
     name: json['name'] as String? ?? 'Exercise',
-    duration: json['duration'] as int? ?? 30,
+    duration: (json['duration'] as num?)?.toInt() ?? 30,
   );
 }
 
@@ -75,9 +75,35 @@ Backup _$BackupFromJson(Map<String, dynamic> json) {
     workouts: (json['workouts'] as List<dynamic>)
         .map((e) => Workout.fromJson(e as Map<String, dynamic>))
         .toList(),
+    history: (json['history'] as List<dynamic>?)
+        ?.map((e) => HistoryEntry.fromJson(e as Map<String, dynamic>))
+        .toList(),
   );
 }
 
-Map<String, dynamic> _$BackupToJson(Backup instance) => <String, dynamic>{
-      'workouts': instance.workouts.map((e) => e.toJson()).toList(),
+Map<String, dynamic> _$BackupToJson(Backup instance) {
+  final val = <String, dynamic>{
+    'workouts': instance.workouts.map((e) => e.toJson()).toList(),
+  };
+  if (instance.history != null) {
+    val['history'] = instance.history!.map((e) => e.toJson()).toList();
+  }
+  return val;
+}
+
+HistoryEntry _$HistoryEntryFromJson(Map<String, dynamic> json) {
+  $checkKeys(
+    json,
+    requiredKeys: const ['title', 'completedAt'],
+  );
+  return HistoryEntry(
+    title: json['title'] as String,
+    completedAt: DateTime.parse(json['completedAt'] as String),
+  );
+}
+
+Map<String, dynamic> _$HistoryEntryToJson(HistoryEntry instance) =>
+    <String, dynamic>{
+      'title': instance.title,
+      'completedAt': instance.completedAt.toIso8601String(),
     };

@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../utils/workout.dart';
+import 'history_helper.dart';
 import 'migrations.dart';
 import 'utils.dart';
 
@@ -27,7 +28,7 @@ Future<void> exportWorkout(String title) async {
   var workout = await loadWorkout(title: title);
   var backup = Backup(workouts: [workout]);
   final params = SaveFileDialogParams(
-    data: Uint8List.fromList(jsonEncode(backup.toJson()).codeUnits),
+    data: Uint8List.fromList(utf8.encode(jsonEncode(backup.toJson()))),
     fileName: '${Utils.removeSpecialChar(title)}.json',
   );
   await FlutterFileDialog.saveFile(params: params);
@@ -42,9 +43,12 @@ Future<void> shareWorkout(String title) async {
 }
 
 Future<void> exportAllWorkouts() async {
-  var backup = Backup(workouts: await getAllWorkouts());
+  var backup = Backup(
+    workouts: await getAllWorkouts(),
+    history: await loadHistory(),
+  );
   final params = SaveFileDialogParams(
-    data: Uint8List.fromList(jsonEncode(backup.toJson()).codeUnits),
+    data: Uint8List.fromList(utf8.encode(jsonEncode(backup.toJson()))),
     fileName: 'Backup.json',
   );
   await FlutterFileDialog.saveFile(params: params);
@@ -67,18 +71,25 @@ Future<int> importFile(bool fromBackup) async {
     try {
       content = await file.readAsString();
     } on FileSystemException {
-      // It might happen that encoding of files gets corrupted somehow.
-      // Therefore loading is tried again with 'allowMalformed' flag.
+      // readAsString wraps UTF-8 decode errors as FileSystemException.
+      // Older app versions wrote backups with String.codeUnits, which for
+      // BMP characters <= 0xFF (German umlauts etc.) is exactly Latin-1 —
+      // valid in Latin-1 but invalid UTF-8. Decoding as Latin-1 recovers
+      // the original characters losslessly.
       var bytes = await file.readAsBytes();
-      content = utf8.decode(bytes, allowMalformed: true);
-      Fluttertoast.showToast(msg: 'Warning: file encoding was corrupted');
+      content = latin1.decode(bytes);
     }
 
     if (fromBackup) {
-      var workouts = Backup.fromJson(jsonDecode(content)).workouts;
-      await Future.wait(workouts.map((w) => writeWorkout(w, fixDuplicates: true)));
+      var backup = Backup.fromJson(jsonDecode(content));
+      await Future.wait(
+        backup.workouts.map((w) => writeWorkout(w, fixDuplicates: true)),
+      );
+      if (backup.history != null) {
+        await addHistoryEntries(backup.history!);
+      }
       await Migrations.runMigrations();
-      return Future.value(workouts.length);
+      return Future.value(backup.workouts.length);
     } else {
       var workout = Workout.fromJson(jsonDecode(content));
       writeWorkout(workout, fixDuplicates: true);
@@ -137,10 +148,13 @@ Future<void> createBackup() async {
   dirbak.createSync();
 
   Utils.copyDirectory(dir, dirbak);
-  var backup = Backup(workouts: await getAllWorkouts());
+  var backup = Backup(
+    workouts: await getAllWorkouts(),
+    history: await loadHistory(),
+  );
   var backupfile = File('${dirbak.path}/backup.json');
   backupfile.writeAsBytesSync(
-    Uint8List.fromList(jsonEncode(backup.toJson()).codeUnits),
+    Uint8List.fromList(utf8.encode(jsonEncode(backup.toJson()))),
   );
 }
 
