@@ -1,4 +1,4 @@
-package com.blockbasti.just_another_workout_timer
+package com.craeckie.workouttimer
 
 import io.flutter.embedding.android.FlutterActivity
 

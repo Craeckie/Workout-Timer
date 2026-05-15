@@ -2,7 +2,7 @@ name: 'just_another_workout_timer'
 version: '1.13.0'
 environment:
   sdk: '>=3.8.0'
-description: Just Another Workout Timer
+description: Workout Timer — interval workouts with TTS announcements.
 
 dependencies:
   collection: '^1.18.0'

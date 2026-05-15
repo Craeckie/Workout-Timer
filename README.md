@@ -19,7 +19,7 @@
     <img src="/assets/ic_launcher.png" alt="Logo" width="80" height="80">
   </a>
 
-  <h3 align="center">Just Another Workout Timer</h3>
+  <h3 align="center">Workout Timer</h3>
 
   <p align="center">
     A simple timer for your workouts, built with Flutter!

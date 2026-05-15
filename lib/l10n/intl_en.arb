@@ -71,7 +71,7 @@
     "settings": "Settings",
     "soundOutput": "Sound output",
     "startWorkout": "Start workout",
-    "title": "Just Another Workout Timer",
+    "title": "Workout Timer",
     "tts": "Text-to-Speech (TTS)",
     "ttsLang": "TTS Language",
     "ttsLangDesc": "Select a language\n(only when TTS is enabled)",
