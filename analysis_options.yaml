@@ -5,6 +5,7 @@ analyzer:
     - lib/generated/**
     - '**/*.g.dart'
     - lib/oss_licenses.dart
+    - local_plugins/**
 
 linter:
   rules:
