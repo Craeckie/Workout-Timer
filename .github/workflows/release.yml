@@ -17,6 +17,7 @@ jobs:
         with:
           fetch-depth: 0
       - uses: googleapis/release-please-action@v4
+        id: release
         with:
           release-type: dart
 
@@ -26,12 +27,13 @@ jobs:
             distribution: "temurin"
             java-version: '21.x'
             cache: 'gradle'
-      
+
       - uses: subosito/flutter-action@v2
         if: ${{ steps.release.outputs.release_created }}
         with:
             channel: 'stable'
-      
+            flutter-version: "3.32.x"
+
       - name: Setup Flutter
         if: ${{ steps.release.outputs.release_created }}
         run: |
@@ -39,6 +41,14 @@ jobs:
           flutter pub get
           dart pub global activate script_runner
           scr build
+
+      - name: Analyze
+        if: ${{ steps.release.outputs.release_created }}
+        run: flutter analyze --no-fatal-infos
+
+      - name: Test
+        if: ${{ steps.release.outputs.release_created }}
+        run: flutter test
 
       - name: Build APKs
         if: ${{ steps.release.outputs.release_created }}
@@ -61,5 +71,4 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ steps.release.outputs.tag_name }} ${{ steps.sign_app.outputs.signedReleaseFile }}#com.blockbasti.justanotherworkouttimer.apk
-
+        run: gh release upload ${{ steps.release.outputs.tag_name }} ${{ steps.sign_app.outputs.signedReleaseFile }}#com.craeckie.workouttimer.apk
