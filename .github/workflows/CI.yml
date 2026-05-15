@@ -19,6 +19,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: "stable"
+          flutter-version: "3.32.x"
       - uses: actions/cache@v4
         with:
           path: /opt/hostedtoolcache/flutter
@@ -30,6 +31,12 @@ jobs:
           flutter pub get
           dart pub global activate script_runner
           scr build
+
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos
+
+      - name: Test
+        run: flutter test
 
       - name: Build APKs
         run: flutter build apk --build-number $(printf '%(%Y%m%d)T\n' -1) --debug
