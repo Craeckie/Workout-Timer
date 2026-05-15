@@ -132,13 +132,6 @@ class WorkoutPageState extends State<WorkoutPageContent> {
         ),
       );
 
-  ShapeBorder? get _runnerCardShape => _isBlackTheme
-      ? RoundedRectangleBorder(
-          side: const BorderSide(color: Colors.white12, width: 1),
-          borderRadius: BorderRadius.circular(12),
-        )
-      : null;
-
   @override
   Widget build(BuildContext context) {
     if (!timetable.isInitialized) {
@@ -236,9 +229,6 @@ class WorkoutPageState extends State<WorkoutPageContent> {
           children: [
             // top card with current exercise
             Card(
-              color: _isBlackTheme ? Colors.black : null,
-              elevation: _isBlackTheme ? 0 : null,
-              shape: _runnerCardShape,
               child: Center(
                 child: Column(
                   children: [
@@ -286,9 +276,6 @@ class WorkoutPageState extends State<WorkoutPageContent> {
                 children: [
                   // card with current set
                   Card(
-                    color: _isBlackTheme ? Colors.black : null,
-                    elevation: _isBlackTheme ? 0 : null,
-                    shape: _runnerCardShape,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -309,9 +296,6 @@ class WorkoutPageState extends State<WorkoutPageContent> {
                   // card with next set
                   timetable.nextSet != null
                       ? Card(
-                          color: _isBlackTheme ? Colors.black : null,
-                          elevation: _isBlackTheme ? 0 : null,
-                          shape: _runnerCardShape,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
