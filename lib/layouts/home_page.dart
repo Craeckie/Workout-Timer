@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:just_another_workout_timer/layouts/workout_runner.dart';
 
 import '../generated/l10n.dart';
@@ -164,20 +163,6 @@ class HomePageState extends State<HomePage> {
         appBar: AppBar(
           title: Text(S.of(context).workouts),
           actions: [
-            IconButton(
-              onPressed: () async {
-                var count = await importFile(false);
-                _loadWorkouts();
-                if (!context.mounted) return;
-                Fluttertoast.showToast(
-                  msg: S.of(context).importedCount(count),
-                  toastLength: Toast.LENGTH_SHORT,
-                  gravity: ToastGravity.CENTER,
-                );
-              },
-              icon: const Icon(Icons.file_download),
-              tooltip: S.of(context).import,
-            ),
             IconButton(
               icon: const Icon(Icons.history),
               tooltip: S.of(context).history,
