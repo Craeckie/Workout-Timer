@@ -63,7 +63,9 @@ Future<String?> pickFile() async {
   return FlutterFileDialog.pickFile(params: params);
 }
 
-Future<int> importFile(bool fromBackup) async {
+enum ImportMode { merge, overwrite }
+
+Future<int> importFile(bool fromBackup, {ImportMode mode = ImportMode.merge}) async {
   String? filePath = await pickFile();
   if (filePath != null && filePath.isNotEmpty) {
     String content;
@@ -82,14 +84,24 @@ Future<int> importFile(bool fromBackup) async {
 
     if (fromBackup) {
       var backup = Backup.fromJson(jsonDecode(content));
-      await Future.wait(
-        backup.workouts.map((w) => writeWorkout(w, fixDuplicates: true)),
-      );
+      List<Workout> toImport;
+      if (mode == ImportMode.overwrite) {
+        for (var existing in await getAllWorkouts()) {
+          await deleteWorkout(existing.title);
+        }
+        toImport = backup.workouts;
+      } else {
+        toImport = [];
+        for (var w in backup.workouts) {
+          if (!await workoutExists(w.title)) toImport.add(w);
+        }
+      }
+      await Future.wait(toImport.map(writeWorkout));
       if (backup.history != null) {
         await addHistoryEntries(backup.history!);
       }
       await Migrations.runMigrations();
-      return Future.value(backup.workouts.length);
+      return Future.value(toImport.length);
     } else {
       var workout = Workout.fromJson(jsonDecode(content));
       writeWorkout(workout, fixDuplicates: true);
