@@ -244,6 +244,38 @@ void main() {
       expect(copy.workouts.single.title, 'A');
     });
 
+    test('settings roundtrip through JSON', () {
+      final backup = w.Backup(
+        workouts: [w.Workout(title: 'A', sets: [])],
+        settings: {
+          'theme': 'dark',
+          'wakelock': true,
+          'tts_engine': 'com.google.android.tts',
+        },
+      );
+      final copy = w.Backup.fromJson(jsonDecode(jsonEncode(backup.toJson())));
+      expect(copy.settings, isNotNull);
+      expect(copy.settings!['theme'], 'dark');
+      expect(copy.settings!['wakelock'], true);
+      expect(copy.settings!['tts_engine'], 'com.google.android.tts');
+    });
+
+    test('settings omitted from JSON when null (back-compat with old backups)',
+        () {
+      final backup = w.Backup(workouts: [w.Workout(title: 'A', sets: [])]);
+      final json = backup.toJson();
+      expect(json.containsKey('settings'), isFalse);
+    });
+
+    test('fromJson — backup without settings field decodes (back-compat)', () {
+      final copy = w.Backup.fromJson({
+        'workouts': [
+          {'title': 'A', 'sets': []},
+        ],
+      });
+      expect(copy.settings, isNull);
+    });
+
     test('byte roundtrip preserves umlauts (regression: .codeUnits bug)', () {
       // Backups used to be written as `jsonEncode(...).codeUnits`, which
       // truncates UTF-16 to bytes and produces Latin-1 for chars like ä/ö/ü.
