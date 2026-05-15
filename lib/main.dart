@@ -62,7 +62,8 @@ class JAWTApp extends StatelessWidget {
     );
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
-    switch (PrefService.of(context).get('theme')) {
+    final themePref = PrefService.of(context).get('theme');
+    switch (themePref) {
       case 'system':
         _brightness = ThemeMode.system;
         break;
@@ -70,56 +71,68 @@ class JAWTApp extends StatelessWidget {
         _brightness = ThemeMode.light;
         break;
       case 'dark':
+      case 'black':
         _brightness = ThemeMode.dark;
         break;
     }
 
     return DynamicColorBuilder(
-      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) =>
-          MaterialApp(
-        title: 'Just Another Workout Timer',
-        themeMode: _brightness,
-        theme: ThemeData(
-          useMaterial3: true,
-          brightness: Brightness.light,
-          colorScheme: lightDynamic,
-          colorSchemeSeed: lightDynamic != null ? null : Colors.blue,
-          cardTheme: const CardTheme(
-            elevation: 4,
+      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+        final darkScheme = (darkDynamic ??
+                ColorScheme.fromSeed(
+                  seedColor: Colors.blue,
+                  brightness: Brightness.dark,
+                ))
+            .copyWith(
+          surface: themePref == 'black' ? Colors.black : null,
+        );
+        return MaterialApp(
+          title: 'Just Another Workout Timer',
+          themeMode: _brightness,
+          theme: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.light,
+            colorScheme: lightDynamic,
+            colorSchemeSeed: lightDynamic != null ? null : Colors.blue,
+            cardTheme: const CardThemeData(
+              elevation: 4,
+            ),
           ),
-        ),
-        darkTheme: ThemeData(
-          useMaterial3: true,
-          brightness: Brightness.dark,
-          cardTheme: const CardTheme(elevation: 4),
-          colorScheme: darkDynamic,
-          colorSchemeSeed: darkDynamic != null ? null : Colors.blue,
-        ),
-        home: const HomePage(),
-        localizationsDelegates: const [
-          S.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
-        supportedLocales: S.delegate.supportedLocales,
-        localeListResolutionCallback: (locales, supportedLocales) {
-          if (PrefService.of(context).get('lang') != null) {
-            final locale = Locale(PrefService.of(context).get('lang'));
-            if (supportedLocales.contains(locale)) return locale;
-          }
-
-          for (var locale in locales!) {
-            if (supportedLocales.any(
-              (element) => element.languageCode == locale.languageCode,
-            )) {
-              PrefService.of(context).set('lang', locale.languageCode);
-              return locale;
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            brightness: Brightness.dark,
+            cardTheme: const CardThemeData(elevation: 4),
+            colorScheme: darkScheme,
+            scaffoldBackgroundColor:
+                themePref == 'black' ? Colors.black : null,
+            canvasColor: themePref == 'black' ? Colors.black : null,
+          ),
+          home: const HomePage(),
+          localizationsDelegates: const [
+            S.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          supportedLocales: S.delegate.supportedLocales,
+          localeListResolutionCallback: (locales, supportedLocales) {
+            if (PrefService.of(context).get('lang') != null) {
+              final locale = Locale(PrefService.of(context).get('lang'));
+              if (supportedLocales.contains(locale)) return locale;
             }
-          }
-          PrefService.of(context).set('lang', 'en');
-          return const Locale('en');
-        },
-      ),
+
+            for (var locale in locales!) {
+              if (supportedLocales.any(
+                (element) => element.languageCode == locale.languageCode,
+              )) {
+                PrefService.of(context).set('lang', locale.languageCode);
+                return locale;
+              }
+            }
+            PrefService.of(context).set('lang', 'en');
+            return const Locale('en');
+          },
+        );
+      },
     );
   }
 }

@@ -83,6 +83,10 @@ class SettingsPageState extends State<SettingsPage> {
                 value: 'system',
                 child: Text(S.of(context).theme_system),
               ),
+              DropdownMenuItem(
+                value: 'black',
+                child: Text(S.of(context).theme_black),
+              ),
             ],
           ),
           PrefSwitch(
