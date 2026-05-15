@@ -139,6 +139,37 @@ class WorkoutPageState extends State<WorkoutPageContent> {
           title: Text(_workout.title),
           scrolledUnderElevation: 1,
           elevation: 1,
+          actions: [
+            if (!timetable.workoutDone && timetable.currentSecond > 0)
+              IconButton(
+                icon: const Icon(Icons.stop_circle_outlined),
+                tooltip: S.of(context).finishEarly,
+                onPressed: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (dialogContext) => AlertDialog(
+                      title: Text(S.of(context).finishEarly),
+                      content: Text(S.of(context).finishEarlyConfirmation),
+                      actions: [
+                        TextButton(
+                          onPressed: () =>
+                              Navigator.of(dialogContext).pop(false),
+                          child: Text(S.of(context).no),
+                        ),
+                        TextButton(
+                          onPressed: () =>
+                              Navigator.of(dialogContext).pop(true),
+                          child: Text(S.of(context).yes),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true) {
+                    timetable.finishEarly();
+                  }
+                },
+              ),
+          ],
         ),
         bottomNavigationBar: BottomAppBar(
           child: Row(
