@@ -100,7 +100,7 @@ class JAWTApp extends StatelessWidget {
             cardTheme: isBlack
                 ? CardThemeData(
                     elevation: 0,
-                    color: liftedSurface,
+                    color: Colors.black,
                     shape: RoundedRectangleBorder(
                       side: const BorderSide(color: Colors.white12, width: 1),
                       borderRadius: BorderRadius.circular(12),
