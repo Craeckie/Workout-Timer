@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Just Another Workout Timer — a Flutter Android app (single platform; iOS/web are not configured) for building and running interval workouts with TTS announcements. Published on F-Droid and GitHub Releases; the two distributions are **not** data-compatible.
+Workout Timer — a Flutter Android app (single platform; iOS/web are not configured) for building and running interval workouts with TTS announcements. This is a fork of `blockbasti/just_another_workout_timer` (published on F-Droid and upstream GitHub Releases); the fork is published only via this repo's GitHub Releases under a different `applicationId` (`com.craeckie.workouttimer`) and therefore installs side-by-side with the upstream app — backups can be moved between them via export/import.
 
 ## Commands
 
@@ -73,4 +73,40 @@ Current pinned versions (in `android/`):
 
 ## Release
 
-Releases are cut by `release-please` on push to `main` (see `.github/workflows/`). Don't bump `pubspec.yaml` `version:` by hand — let release-please do it from conventional-commit messages (`feat:`, `fix:`, `chore:` — match the existing log style).
+Releases are cut by `release-please` on push to `main`.
+
+1. Land commits on `main` using conventional-commit prefixes: `feat:` → minor
+   bump, `fix:` → patch bump, `chore:`/`docs:`/`refactor:`/`test:` → no bump.
+   Breaking changes go in a `BREAKING CHANGE:` footer and trigger a major bump.
+2. `release-please` opens (or updates) a "release PR" that bumps
+   `pubspec.yaml: version:` and `CHANGELOG.md`. Review and merge it when you
+   want to ship.
+3. Merging the release PR triggers `.github/workflows/release.yml`:
+   `scr build` → `flutter analyze` → `flutter test` → `flutter build apk` →
+   signed via `r0adkll/sign-android-release@v1` using the repo secrets
+   `SIGNING_KEY` (base64-encoded keystore) and `SIGNING_KEY_PASSWORD` →
+   uploaded to the GitHub Release as `com.craeckie.workouttimer.apk`.
+4. CI on every other push (`CI.yml`) runs the same analyze + test + build
+   steps but produces an unsigned debug APK artifact for smoke-testing
+   branches before merge.
+
+Never bump `pubspec.yaml: version:` by hand — `release-please` owns it.
+Never `--amend` a commit that has already been pushed; `release-please` walks
+the commit log, and rewriting history confuses it.
+
+### Signing keystore (one-time setup per fork)
+
+```
+keytool -genkeypair -v -keystore release.jks -keyalg RSA -keysize 2048 \
+        -validity 10000 -alias key
+base64 -w0 release.jks      # paste into the SIGNING_KEY repo secret
+                            # store the keystore password in SIGNING_KEY_PASSWORD
+```
+
+Both the keystore alias (hard-coded as `key` in `release.yml`) and the
+`r0adkll/sign-android-release` action use a single password for both the
+keystore and the key — generate the keystore accordingly.
+
+`release.sh` is the local-dev equivalent and re-signs the build output with
+`apksigner` from a checked-out keystore (`../my-debug.jks`); it is not used
+by CI.
