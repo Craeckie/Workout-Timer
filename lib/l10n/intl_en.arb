@@ -24,7 +24,7 @@
     "exercise": "Exercise",
     "exerciseOf": "Exercise {currentIndex} of {total}",
     "exitCheck": "Are you sure you want to exit?",
-    "export": "Export all workouts",
+    "export": "Backup workouts and history",
     "firstExercise": "First: {name}",
     "general": "General",
     "halfwayDone": "Halfway done",
