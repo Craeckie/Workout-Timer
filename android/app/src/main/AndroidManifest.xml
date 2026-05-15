@@ -5,7 +5,7 @@
         </intent>
     </queries>
    <application
-        android:label="Just Another Workout Timer"
+        android:label="Workout Timer"
         android:icon="@mipmap/launcher_icon"
         android:allowBackup="true">
         <activity

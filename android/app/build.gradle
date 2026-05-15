@@ -45,7 +45,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.blockbasti.justanotherworkouttimer"
+        applicationId "com.craeckie.workouttimer"
         minSdkVersion 24
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
@@ -76,7 +76,7 @@ android {
             signingConfig keystoreProperties['storeFile'] ? signingConfigs.release : signingConfigs.debug
         }
     }
-    namespace 'com.blockbasti.just_another_workout_timer'
+    namespace 'com.craeckie.workouttimer'
 }
 
 flutter {
