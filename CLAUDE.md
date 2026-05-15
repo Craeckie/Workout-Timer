@@ -82,10 +82,13 @@ Releases are cut by `release-please` on push to `main`.
    `pubspec.yaml: version:` and `CHANGELOG.md`. Review and merge it when you
    want to ship.
 3. Merging the release PR triggers `.github/workflows/release.yml`:
-   `scr build` → `flutter analyze` → `flutter test` → `flutter build apk` →
-   signed via `r0adkll/sign-android-release@v1` using the repo secrets
-   `SIGNING_KEY` (base64-encoded keystore) and `SIGNING_KEY_PASSWORD` →
-   uploaded to the GitHub Release as `com.craeckie.workouttimer.apk`.
+   `scr build` → `flutter analyze` → `flutter test` →
+   `flutter build apk --split-per-abi --target-platform android-arm64,android-arm`
+   (no x86_64) → signed via `r0adkll/sign-android-release@v1` using the
+   repo secrets `SIGNING_KEY` (base64-encoded keystore) and
+   `SIGNING_KEY_PASSWORD` → each APK uploaded to the GitHub Release as
+   `com.craeckie.workouttimer-<abi>.apk`. `release.sh` (local-dev) builds
+   arm64-only via `--target-platform android-arm64`.
 4. CI on every other push (`CI.yml`) runs the same analyze + test + build
    steps but produces an unsigned debug APK artifact for smoke-testing
    branches before merge.
