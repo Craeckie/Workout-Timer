@@ -116,10 +116,14 @@ class WorkoutPageState extends State<WorkoutPageContent> {
     );
   }
 
+  bool get _isBlackTheme =>
+      Theme.of(context).scaffoldBackgroundColor == Colors.black;
+
   Widget _buildSetItem(Exercise exercise, bool active) => ListTile(
         tileColor: active
             ? Theme.of(context).primaryColor
-            : Theme.of(context).focusColor,
+            : (_isBlackTheme ? Colors.transparent : Theme.of(context).focusColor),
+        textColor: !active && _isBlackTheme ? Colors.white70 : null,
         title: Text(exercise.name),
         subtitle: Text(
           S
@@ -127,6 +131,13 @@ class WorkoutPageState extends State<WorkoutPageContent> {
               .durationWithTime(Utils.formatSeconds(exercise.duration)),
         ),
       );
+
+  ShapeBorder? get _runnerCardShape => _isBlackTheme
+      ? RoundedRectangleBorder(
+          side: const BorderSide(color: Colors.white12, width: 1),
+          borderRadius: BorderRadius.circular(12),
+        )
+      : null;
 
   @override
   Widget build(BuildContext context) {
@@ -225,6 +236,9 @@ class WorkoutPageState extends State<WorkoutPageContent> {
           children: [
             // top card with current exercise
             Card(
+              color: _isBlackTheme ? Colors.black : null,
+              elevation: _isBlackTheme ? 0 : null,
+              shape: _runnerCardShape,
               child: Center(
                 child: Column(
                   children: [
@@ -272,6 +286,9 @@ class WorkoutPageState extends State<WorkoutPageContent> {
                 children: [
                   // card with current set
                   Card(
+                    color: _isBlackTheme ? Colors.black : null,
+                    elevation: _isBlackTheme ? 0 : null,
+                    shape: _runnerCardShape,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -292,6 +309,9 @@ class WorkoutPageState extends State<WorkoutPageContent> {
                   // card with next set
                   timetable.nextSet != null
                       ? Card(
+                          color: _isBlackTheme ? Colors.black : null,
+                          elevation: _isBlackTheme ? 0 : null,
+                          shape: _runnerCardShape,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
