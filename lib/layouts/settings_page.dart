@@ -113,14 +113,43 @@ class SettingsPageState extends State<SettingsPage> {
           ),
           PrefLabel(
             title: Text(S.of(context).import),
-            onTap: () => {
-              importFile(true).then(
-                (value) => Fluttertoast.showToast(
-                  msg: S.of(context).importedCount(value),
-                  toastLength: Toast.LENGTH_SHORT,
-                  gravity: ToastGravity.CENTER,
-                ),
-              ),
+            onTap: () async {
+              var mode = ImportMode.overwrite;
+              if ((await getAllWorkouts()).isNotEmpty) {
+                if (!context.mounted) return;
+                final chosen = await showDialog<ImportMode>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: Text(S.of(ctx).importExistingTitle),
+                    content: Text(S.of(ctx).importExistingMessage),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: Text(S.of(ctx).cancel),
+                      ),
+                      TextButton(
+                        onPressed: () =>
+                            Navigator.pop(ctx, ImportMode.merge),
+                        child: Text(S.of(ctx).importMerge),
+                      ),
+                      TextButton(
+                        onPressed: () =>
+                            Navigator.pop(ctx, ImportMode.overwrite),
+                        child: Text(S.of(ctx).importOverwrite),
+                      ),
+                    ],
+                  ),
+                );
+                if (chosen == null) return;
+                mode = chosen;
+              }
+              final count = await importFile(true, mode: mode);
+              if (!context.mounted) return;
+              Fluttertoast.showToast(
+                msg: S.of(context).importedCount(count),
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.CENTER,
+              );
             },
           ),
           PrefTitle(
