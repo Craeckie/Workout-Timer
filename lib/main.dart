@@ -49,9 +49,7 @@ void main() async {
 }
 
 class JAWTApp extends StatelessWidget {
-  ThemeMode? _brightness;
-
-  JAWTApp({super.key});
+  const JAWTApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -63,32 +61,27 @@ class JAWTApp extends StatelessWidget {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     final themePref = PrefService.of(context).get('theme');
-    switch (themePref) {
-      case 'system':
-        _brightness = ThemeMode.system;
-        break;
-      case 'light':
-        _brightness = ThemeMode.light;
-        break;
-      case 'dark':
-      case 'black':
-        _brightness = ThemeMode.dark;
-        break;
-    }
+    final brightness = switch (themePref) {
+      'light' => ThemeMode.light,
+      'dark' || 'black' => ThemeMode.dark,
+      _ => ThemeMode.system,
+    };
 
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+        final isBlack = themePref == 'black';
+        // OLED-friendly: scaffold is pure black, but card/dialog surfaces
+        // are lifted to a dark grey so structure stays visible.
+        const liftedSurface = Color(0xFF1E1E1E);
         final darkScheme = (darkDynamic ??
                 ColorScheme.fromSeed(
                   seedColor: Colors.blue,
                   brightness: Brightness.dark,
                 ))
-            .copyWith(
-          surface: themePref == 'black' ? Colors.black : null,
-        );
+            .copyWith(surface: isBlack ? liftedSurface : null);
         return MaterialApp(
-          title: 'Just Another Workout Timer',
-          themeMode: _brightness,
+          title: 'Workout Timer',
+          themeMode: brightness,
           theme: ThemeData(
             useMaterial3: true,
             brightness: Brightness.light,
@@ -101,11 +94,25 @@ class JAWTApp extends StatelessWidget {
           darkTheme: ThemeData(
             useMaterial3: true,
             brightness: Brightness.dark,
-            cardTheme: const CardThemeData(elevation: 4),
             colorScheme: darkScheme,
-            scaffoldBackgroundColor:
-                themePref == 'black' ? Colors.black : null,
-            canvasColor: themePref == 'black' ? Colors.black : null,
+            scaffoldBackgroundColor: isBlack ? Colors.black : null,
+            canvasColor: isBlack ? Colors.black : null,
+            cardTheme: isBlack
+                ? CardThemeData(
+                    elevation: 0,
+                    color: liftedSurface,
+                    shape: RoundedRectangleBorder(
+                      side: const BorderSide(color: Colors.white12, width: 1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  )
+                : const CardThemeData(elevation: 4),
+            dialogTheme: isBlack
+                ? const DialogThemeData(backgroundColor: liftedSurface)
+                : null,
+            bottomSheetTheme: isBlack
+                ? const BottomSheetThemeData(backgroundColor: liftedSurface)
+                : null,
           ),
           home: const HomePage(),
           localizationsDelegates: const [
