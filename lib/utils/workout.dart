@@ -106,7 +106,11 @@ class Backup {
   @JsonKey(includeIfNull: false)
   List<HistoryEntry>? history;
 
-  Backup({required this.workouts, this.history});
+  // Nullable: backups from versions before settings backup existed omit the key.
+  @JsonKey(includeIfNull: false)
+  Map<String, dynamic>? settings;
+
+  Backup({required this.workouts, this.history, this.settings});
 
   factory Backup.fromJson(Map<String, dynamic> json) => _$BackupFromJson(json);
   Map<String, dynamic> toJson() => _$BackupToJson(this);

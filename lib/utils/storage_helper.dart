@@ -3,14 +3,38 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter_file_dialog/flutter_file_dialog.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:prefs/prefs.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../utils/workout.dart';
 import 'history_helper.dart';
 import 'migrations.dart';
 import 'utils.dart';
+
+Future<Map<String, dynamic>> _dumpSettings() async {
+  final prefs = await SharedPreferences.getInstance();
+  return {for (var key in prefs.getKeys()) key: prefs.get(key)};
+}
+
+Future<void> _restoreSettings(Map<String, dynamic> settings) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
+  for (final entry in settings.entries) {
+    final value = entry.value;
+    if (value is bool) {
+      await prefs.setBool(entry.key, value);
+    } else if (value is int) {
+      await prefs.setInt(entry.key, value);
+    } else if (value is double) {
+      await prefs.setDouble(entry.key, value);
+    } else if (value is String) {
+      await prefs.setString(entry.key, value);
+    } else if (value is List) {
+      await prefs.setStringList(entry.key, value.cast<String>());
+    }
+  }
+}
 
 Future<String> get localPath async {
   final directory = await getExternalStorageDirectory();
@@ -46,10 +70,12 @@ Future<void> exportAllWorkouts() async {
   var backup = Backup(
     workouts: await getAllWorkouts(),
     history: await loadHistory(),
+    settings: await _dumpSettings(),
   );
+  final today = DateTime.now().toIso8601String().substring(0, 10);
   final params = SaveFileDialogParams(
     data: Uint8List.fromList(utf8.encode(jsonEncode(backup.toJson()))),
-    fileName: 'Backup.json',
+    fileName: 'WorkoutTimer_$today.json',
   );
   await FlutterFileDialog.saveFile(params: params);
 }
@@ -99,6 +125,10 @@ Future<int> importFile(bool fromBackup, {ImportMode mode = ImportMode.merge}) as
       await Future.wait(toImport.map(writeWorkout));
       if (backup.history != null) {
         await addHistoryEntries(backup.history!);
+      }
+      // Settings only restored on overwrite — merge keeps the user's current setup.
+      if (mode == ImportMode.overwrite && backup.settings != null) {
+        await _restoreSettings(backup.settings!);
       }
       await Migrations.runMigrations();
       return Future.value(toImport.length);
@@ -163,6 +193,7 @@ Future<void> createBackup() async {
   var backup = Backup(
     workouts: await getAllWorkouts(),
     history: await loadHistory(),
+    settings: await _dumpSettings(),
   );
   var backupfile = File('${dirbak.path}/backup.json');
   backupfile.writeAsBytesSync(

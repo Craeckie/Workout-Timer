@@ -66,12 +66,14 @@ Backup _$BackupFromJson(Map<String, dynamic> json) {
     history: (json['history'] as List<dynamic>?)
         ?.map((e) => HistoryEntry.fromJson(e as Map<String, dynamic>))
         .toList(),
+    settings: json['settings'] as Map<String, dynamic>?,
   );
 }
 
 Map<String, dynamic> _$BackupToJson(Backup instance) => <String, dynamic>{
   'workouts': instance.workouts.map((e) => e.toJson()).toList(),
   'history': ?instance.history?.map((e) => e.toJson()).toList(),
+  'settings': ?instance.settings,
 };
 
 HistoryEntry _$HistoryEntryFromJson(Map<String, dynamic> json) {
