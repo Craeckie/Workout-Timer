@@ -6,6 +6,7 @@ import '../generated/l10n.dart';
 import '../utils/storage_helper.dart';
 import '../utils/utils.dart';
 import '../utils/workout.dart';
+import 'history_page.dart';
 import 'settings_page.dart';
 import 'workout_builder.dart';
 
@@ -176,6 +177,18 @@ class HomePageState extends State<HomePage> {
               },
               icon: const Icon(Icons.file_download),
               tooltip: S.of(context).import,
+            ),
+            IconButton(
+              icon: const Icon(Icons.history),
+              tooltip: S.of(context).history,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HistoryPage(),
+                  ),
+                );
+              },
             ),
             IconButton(
               icon: const Icon(Icons.settings),

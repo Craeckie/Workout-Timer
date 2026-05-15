@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
+import 'history_helper.dart';
 import 'sound_helper.dart';
 import 'package:just_another_workout_timer/utils/tts_helper.dart';
 import 'workout.dart';
@@ -242,6 +243,7 @@ class Timetable with ChangeNotifier {
         workoutDone = true;
         currentExercise =
             Exercise(name: S.of(_context).workoutComplete, duration: 1);
+        appendHistoryEntry(_workout.title);
         notifyListeners();
       };
 
@@ -272,6 +274,17 @@ class Timetable with ChangeNotifier {
 
   void timerStop() {
     _timer?.cancel();
+    notifyListeners();
+  }
+
+  void finishEarly() {
+    if (workoutDone) return;
+    timerStop();
+    workoutDone = true;
+    currentExercise =
+        Exercise(name: S.of(_context).workoutComplete, duration: 1);
+    TTSHelper.speak(S.of(_context).workoutComplete);
+    appendHistoryEntry(_workout.title);
     notifyListeners();
   }
 }
