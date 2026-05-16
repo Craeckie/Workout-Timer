@@ -1,3 +1,11 @@
+# [2.0.1](https://github.com/Craeckie/just_another_workout_timer/releases/tag/v2.0.1) (2026-05-16)
+
+### 🐛 Fixes
+
+* 🔇 **TTS crash on first launch** — The app crashed on first run when the TTS engine had not yet been set up by the OS (e.g. on a fresh install in a managed/work profile). TTS now gracefully falls back to beep mode instead of throwing a type error.
+
+---
+
 # [2.0.0](https://github.com/Craeckie/just_another_workout_timer/releases/tag/v2.0.0) (2026-05-16)
 
 🍴 First release of the **Workout Timer** fork (`com.craeckie.workouttimer`), based on upstream v1.13.0. Installs side-by-side with the original app — backups are compatible between them.
