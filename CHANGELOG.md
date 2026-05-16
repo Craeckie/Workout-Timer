@@ -1,3 +1,24 @@
+# [2.0.0](https://github.com/Craeckie/just_another_workout_timer/releases/tag/v2.0.0) (2026-05-16)
+
+🍴 First release of the **Workout Timer** fork (`com.craeckie.workouttimer`), based on upstream v1.13.0. Installs side-by-side with the original app — backups are compatible between them.
+
+### ✨ New Features
+
+* 🖤 **OLED Black Theme** — True-black card surfaces throughout the app. The workout runner goes nearly full-black during sessions for maximum AMOLED battery savings. Toggle under Settings → Theme.
+* 📜 **Workout History** — Every completed workout is logged with a timestamp. Browse past sessions on the new History screen, swipe to remove individual entries, or clear all at once.
+* ⏹️ **Finish Early** — The runner now has a "Finish Early" button. Stopping mid-workout still logs it to your history.
+* 🤔 **Smarter Import** — When importing a backup that contains workouts you already have, you're prompted to choose: merge (keep both) or overwrite (replace existing).
+* 💾 **Richer Backups** — Backup files now include your app settings alongside your workouts. Filenames are stamped with the export date for easier file management.
+
+### 🔧 Under the Hood
+
+* 🏗️ **Tag-based releases** — CI ships APKs when a `v*` tag is pushed; no release-please bot needed.
+* 📦 **Per-ABI APKs** — Separate arm64 and arm builds; x86_64 dropped for smaller downloads.
+* ⚡ **Faster builds** — Gradle daemon on, Jetifier off.
+* 📚 **Updated stack** — Flutter 3.41, AGP 8.12.2, Gradle 8.14.5, Kotlin 2.2.21, and all transitive Flutter packages updated.
+
+---
+
 # [1.13.0](https://github.com/blockbasti/just_another_workout_timer/compare/v1.12.0...v1.13.0) (2023-09-29)
 
 
