@@ -74,29 +74,38 @@ Current pinned versions (in `android/`):
 
 ## Release
 
-Releases are cut by `release-please` on push to `main`.
+Releases are triggered by pushing a `v*` tag. When the user says **"Create a release"**, follow these steps:
 
-1. Land commits on `main` using conventional-commit prefixes: `feat:` → minor
-   bump, `fix:` → patch bump, `chore:`/`docs:`/`refactor:`/`test:` → no bump.
-   Breaking changes go in a `BREAKING CHANGE:` footer and trigger a major bump.
-2. `release-please` opens (or updates) a "release PR" that bumps
-   `pubspec.yaml: version:` and `CHANGELOG.md`. Review and merge it when you
-   want to ship.
-3. Merging the release PR triggers `.github/workflows/release.yml`:
-   `scr build` → `flutter analyze` → `flutter test` →
-   `flutter build apk --split-per-abi --target-platform android-arm64,android-arm`
-   (no x86_64) → signed via `r0adkll/sign-android-release@v1` using the
-   repo secrets `SIGNING_KEY` (base64-encoded keystore) and
-   `SIGNING_KEY_PASSWORD` → each APK uploaded to the GitHub Release as
-   `com.craeckie.workouttimer-<abi>.apk`. `release.sh` (local-dev) builds
-   arm64-only via `--target-platform android-arm64`.
-4. CI on every other push (`CI.yml`) runs the same analyze + test + build
-   steps but produces an unsigned debug APK artifact for smoke-testing
-   branches before merge.
+1. **Find the last tag** (or note if none exist yet):
+   ```
+   git describe --tags --abbrev=0 2>/dev/null || echo "(no tags yet)"
+   ```
+2. **Summarize commits** since that tag (or since the fork point `02c292b` for the first release):
+   ```
+   git log <last-tag>..HEAD --oneline
+   # or for first release:
+   git log 02c292b..HEAD --oneline
+   ```
+3. **Draft release notes** — group changes into New Features, Fixes, and Under the Hood. Use emojis where they add meaning.
+4. **Ask** the user: minor bump or patch bump? (major only for breaking changes)
+5. **Bump the version** in `pubspec.yaml` (`version: 'X.Y.Z'`). Keep build number absent or as-is.
+6. **Prepend an entry** to `CHANGELOG.md` with the version, date, and the release notes.
+7. **Commit** the version bump and changelog:
+   ```
+   git commit -m "chore: release vX.Y.Z"
+   ```
+8. **Tag and push**:
+   ```
+   git tag vX.Y.Z
+   git push && git push --tags
+   ```
+9. **Create the GitHub Release** before the tag push triggers the upload step (CI does `gh release upload`, not `create`):
+   ```
+   gh release create vX.Y.Z --title "vX.Y.Z" --notes "..."
+   ```
+   CI will then build, sign, and attach the APKs automatically.
 
-Never bump `pubspec.yaml: version:` by hand — `release-please` owns it.
-Never `--amend` a commit that has already been pushed; `release-please` walks
-the commit log, and rewriting history confuses it.
+CI on every non-tag push (`CI.yml`) runs analyze + test + debug build for smoke-testing branches before tagging.
 
 ### Local `release.sh` speed tips
 
