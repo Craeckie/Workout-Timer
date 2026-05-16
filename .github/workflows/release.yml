@@ -1,41 +1,30 @@
 name: Create release
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'
 
 permissions:
   contents: write
-  pull-requests: write
-
 
 jobs:
   create_release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: googleapis/release-please-action@v4
-        id: release
-        with:
-          release-type: dart
 
       - uses: actions/setup-java@v4
-        if: ${{ steps.release.outputs.release_created }}
         with:
-            distribution: "temurin"
-            java-version: '21.x'
-            cache: 'gradle'
+          distribution: "temurin"
+          java-version: '21.x'
+          cache: 'gradle'
 
       - uses: subosito/flutter-action@v2
-        if: ${{ steps.release.outputs.release_created }}
         with:
-            channel: 'stable'
-            flutter-version: "3.41.x"
+          channel: 'stable'
+          flutter-version: "3.41.x"
 
       - name: Setup Flutter
-        if: ${{ steps.release.outputs.release_created }}
         run: |
           flutter config --no-analytics
           flutter pub get
@@ -43,21 +32,17 @@ jobs:
           scr build
 
       - name: Analyze
-        if: ${{ steps.release.outputs.release_created }}
         run: flutter analyze --no-fatal-infos
 
       - name: Test
-        if: ${{ steps.release.outputs.release_created }}
         run: flutter test
 
       - name: Build APKs
-        if: ${{ steps.release.outputs.release_created }}
         run: flutter build apk --split-per-abi --target-platform android-arm64,android-arm
 
       - name: Sign APKs
         uses: r0adkll/sign-android-release@v1
         id: sign_app
-        if: ${{ steps.release.outputs.release_created }}
         with:
           releaseDirectory: ./build/app/outputs/apk/release
           signingKeyBase64: ${{ secrets.SIGNING_KEY }}
@@ -68,11 +53,10 @@ jobs:
           BUILD_TOOLS_VERSION: "35.0.0"
 
       - name: Upload Release Artifacts
-        if: ${{ steps.release.outputs.release_created }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SIGNED_FILES: ${{ steps.sign_app.outputs.signedReleaseFile }}
-          TAG: ${{ steps.release.outputs.tag_name }}
+          TAG: ${{ github.ref_name }}
         run: |
           IFS=',' read -ra FILES <<< "$SIGNED_FILES"
           for f in "${FILES[@]}"; do
