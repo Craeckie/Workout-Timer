@@ -86,5 +86,5 @@ script_runner:
     - translations: dart run intl_utils:generate
     - launcher_icons: flutter pub run flutter_launcher_icons
     - native_splash: flutter pub run flutter_native_splash:create
-    - build_runner: dart run build_runner build --delete-conflicting-outputs
+    - build_runner: dart run build_runner build
     - build: scr licenses && scr translations && scr launcher_icons && scr native_splash && scr build_runner
