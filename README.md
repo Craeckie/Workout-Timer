@@ -8,14 +8,13 @@
 <img src="https://weblate.bblock.dev/widgets/just-another-workout-timer/-/app/svg-badge.svg" alt="Übersetzungsstatus" />
 </a>
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/X8X8827HU)
-![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/blockbasti/just_another_workout_timer/CI/main?style=for-the-badge)
-![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/blockbasti/just_another_workout_timer?style=for-the-badge)
-![F-Droid](https://img.shields.io/f-droid/v/com.blockbasti.justanotherworkouttimer?style=for-the-badge)
+![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/Craeckie/just_another_workout_timer/CI/main?style=for-the-badge)
+![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/Craeckie/just_another_workout_timer?style=for-the-badge)
 
 <!-- PROJECT LOGO -->
 <br />
 <p align="center">
-  <a href="https://github.com/blockbasti/just_another_workout_timer">
+  <a href="https://github.com/Craeckie/just_another_workout_timer">
     <img src="/assets/ic_launcher.png" alt="Logo" width="80" height="80">
   </a>
 
@@ -24,20 +23,11 @@
   <p align="center">
     A simple timer for your workouts, built with Flutter!
     <br />
-    <a href="https://f-droid.org/packages/com.blockbasti.justanotherworkouttimer">
-        <img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
-        alt="Get it on F-Droid"
-             height="80"></a>
-    <a href="https://github.com/blockbasti/just_another_workout_timer/releases/latest">
+    <a href="https://github.com/Craeckie/just_another_workout_timer/releases/latest">
         <img src="/assets/get-it-on-github.png"
         alt="Get it on GitHub"
              height="80"></a>
     <br />
-      <p>
-        NOTE: Due to the process of releasing updates on F-Droid, the version there can be outdated for a few days.
-        The version on GitHub will always be the latest. Keep in mind, that the F-Droid and GitHub versions are not compatible with each other.
-        If you switch, you will loose ALL your data. You need to  <a href="#how-to-backup--restore-your-workouts">backup your workouts</a> to keep them.
-      </p>
 
 
 <!-- TABLE OF CONTENTS -->
@@ -81,7 +71,7 @@ You can export individual workouts or create an export of all your workouts and 
 <!-- ROADMAP -->
 ## Roadmap
 
-See the [open issues](https://github.com/blockbasti/just_another_workout_timer/issues) for a list of proposed features (and known issues).
+See the [open issues](https://github.com/Craeckie/just_another_workout_timer/issues) for a list of proposed features (and known issues).
 
 <!-- CONTRIBUTING -->
 ## Contributing
@@ -108,13 +98,13 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/blockbasti/just_another_workout_timer.svg?style=for-the-badge
-[contributors-url]: https://github.com/blockbasti/just_another_workout_timer/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/blockbasti/just_another_workout_timer.svg?style=for-the-badge
-[forks-url]: https://github.com/blockbasti/just_another_workout_timer/network/members
-[stars-shield]: https://img.shields.io/github/stars/blockbasti/just_another_workout_timer.svg?style=for-the-badge
-[stars-url]: https://github.com/blockbasti/just_another_workout_timer/stargazers
-[issues-shield]: https://img.shields.io/github/issues/blockbasti/just_another_workout_timer.svg?style=for-the-badge
-[issues-url]: https://github.com/blockbasti/just_another_workout_timer/issues
-[license-shield]: https://img.shields.io/github/license/blockbasti/just_another_workout_timer.svg?style=for-the-badge
-[license-url]: https://github.com/blockbasti/just_another_workout_timer/blob/master/LICENSE
+[contributors-shield]: https://img.shields.io/github/contributors/Craeckie/just_another_workout_timer.svg?style=for-the-badge
+[contributors-url]: https://github.com/Craeckie/just_another_workout_timer/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/Craeckie/just_another_workout_timer.svg?style=for-the-badge
+[forks-url]: https://github.com/Craeckie/just_another_workout_timer/network/members
+[stars-shield]: https://img.shields.io/github/stars/Craeckie/just_another_workout_timer.svg?style=for-the-badge
+[stars-url]: https://github.com/Craeckie/just_another_workout_timer/stargazers
+[issues-shield]: https://img.shields.io/github/issues/Craeckie/just_another_workout_timer.svg?style=for-the-badge
+[issues-url]: https://github.com/Craeckie/just_another_workout_timer/issues
+[license-shield]: https://img.shields.io/github/license/Craeckie/just_another_workout_timer.svg?style=for-the-badge
+[license-url]: https://github.com/Craeckie/just_another_workout_timer/blob/master/LICENSE
