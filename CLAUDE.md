@@ -60,9 +60,9 @@ Material 3 with `dynamic_color` (Material You). The app reseeds from `lightDynam
 
 Current pinned versions (in `android/`):
 
-- AGP `8.7.0` (`settings.gradle`) — minimum 8.6.0 required by current `androidx.core` transitive deps.
-- Gradle wrapper `8.9` (`gradle/wrapper/gradle-wrapper.properties`) — AGP 8.7 requires ≥ 8.9.
-- Kotlin Gradle plugin `2.2.0` (`settings.gradle`) — matches the metadata version used by `share_plus 12.x`.
+- AGP `8.12.2` (`settings.gradle`) — minimum 8.6.0 required by current `androidx.core` transitive deps.
+- Gradle wrapper `8.14.5` (`gradle/wrapper/gradle-wrapper.properties`) — AGP 8.12 requires ≥ 8.13.
+- Kotlin Gradle plugin `2.2.21` (`settings.gradle`) — 2.2.x bug-fix series; 2.2.0 was the initial 2.2 release.
 - `compileSdk 36` (`app/build.gradle`) — required by `fluttertoast 9.x`.
 - `org.gradle.jvmargs=-Xmx2048M`, `org.gradle.parallel=false`, `org.gradle.workers.max=1` in `gradle.properties` — host-specific tuning for a ~4 GiB build VM. Bump heap and re-enable parallel/workers on a workstation with more headroom.
 - `org.gradle.daemon=true` and `android.enableJetifier=false` — daemon stays warm across runs (saves JVM cold-start); Jetifier is off because all plugins are already AndroidX. If the daemon gets memory-tight, stop it with `./gradlew --stop` from `android/`.
