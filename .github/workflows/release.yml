@@ -32,7 +32,7 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         with:
             channel: 'stable'
-            flutter-version: "3.32.x"
+            flutter-version: "3.41.x"
 
       - name: Setup Flutter
         if: ${{ steps.release.outputs.release_created }}
