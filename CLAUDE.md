@@ -64,7 +64,8 @@ Current pinned versions (in `android/`):
 - Gradle wrapper `8.9` (`gradle/wrapper/gradle-wrapper.properties`) — AGP 8.7 requires ≥ 8.9.
 - Kotlin Gradle plugin `2.2.0` (`settings.gradle`) — matches the metadata version used by `share_plus 12.x`.
 - `compileSdk 36` (`app/build.gradle`) — required by `fluttertoast 9.x`.
-- `org.gradle.jvmargs=-Xmx2048M` with daemon/parallel/workers disabled in `gradle.properties` — host-specific tuning for a ~4 GiB build VM. Bump back up and re-enable the daemon on a workstation with more headroom.
+- `org.gradle.jvmargs=-Xmx2048M`, `org.gradle.parallel=false`, `org.gradle.workers.max=1` in `gradle.properties` — host-specific tuning for a ~4 GiB build VM. Bump heap and re-enable parallel/workers on a workstation with more headroom.
+- `org.gradle.daemon=true` and `android.enableJetifier=false` — daemon stays warm across runs (saves JVM cold-start); Jetifier is off because all plugins are already AndroidX. If the daemon gets memory-tight, stop it with `./gradlew --stop` from `android/`.
 - Release signing falls back to debug-signing when `key.properties` is absent. `release.sh` re-signs the unsigned-by-the-build APK with `apksigner` afterward — that flow still works because `apksigner` doesn't care what signature is on the input.
 
 ### Vendored `soundpool`
@@ -96,6 +97,12 @@ Releases are cut by `release-please` on push to `main`.
 Never bump `pubspec.yaml: version:` by hand — `release-please` owns it.
 Never `--amend` a commit that has already been pushed; `release-please` walks
 the commit log, and rewriting history confuses it.
+
+### Local `release.sh` speed tips
+
+- `./release.sh <keystore-password>` runs the full `scr build` codegen pipeline first. After `.arb`/schema/asset/`pubspec.yaml` changes, that's what you want.
+- For repeat builds with no codegen-input changes, use `./release.sh --skip-codegen <keystore-password>` — saves the five Dart-VM cold starts.
+- Do **not** run `flutter clean` between builds unless a plugin version changed; it wipes the 2–3 GB Kotlin/dex/R8 cache and forces a from-scratch rebuild.
 
 ### Signing keystore (one-time setup per fork)
 
