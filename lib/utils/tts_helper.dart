@@ -37,11 +37,21 @@ class TTSHelper {
 
     // populate the list of available TTS voices
     try {
-      List<dynamic> allVoices =
+      final rawVoices =
           await flutterTts.getVoices.timeout(const Duration(seconds: 1));
+      if (rawVoices == null) {
+        _ttsUnavailable();
+        return;
+      }
+      List<dynamic> allVoices = rawVoices;
 
-      engines = (await flutterTts.getEngines.timeout(const Duration(seconds: 1))
-              as List<Object?>)
+      final rawEngines =
+          await flutterTts.getEngines.timeout(const Duration(seconds: 1));
+      if (rawEngines == null) {
+        _ttsUnavailable();
+        return;
+      }
+      engines = (rawEngines as List<Object?>)
           .map((e) => e.toString())
           .toList(growable: false);
 
