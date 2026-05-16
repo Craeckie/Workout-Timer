@@ -60,9 +60,11 @@ Future<void> exportWorkout(String title) async {
 
 Future<void> shareWorkout(String title) async {
   final path = await localPath;
-  Share.shareXFiles(
-    [XFile('$path/workouts/${Utils.removeSpecialChar(title)}.json')],
-    text: title,
+  await SharePlus.instance.share(
+    ShareParams(
+      files: [XFile('$path/workouts/${Utils.removeSpecialChar(title)}.json')],
+      text: title,
+    ),
   );
 }
 
