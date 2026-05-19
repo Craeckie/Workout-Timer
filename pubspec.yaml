@@ -1,5 +1,5 @@
 name: 'just_another_workout_timer'
-version: '2.0.1'
+version: '2.1.0'
 environment:
   sdk: '>=3.9.0'
 description: Workout Timer — interval workouts with TTS announcements.
