@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -5,6 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import '../generated/l10n.dart';
 import '../utils/number_stepper.dart';
+import '../utils/autobackup_helper.dart';
 import '../utils/storage_helper.dart';
 import '../utils/utils.dart';
 import '../utils/workout.dart';
@@ -106,7 +109,8 @@ class BuilderPageState extends State<BuilderPage> {
               child: Text(S.of(context).yes),
               onPressed: () async {
                 await deleteWorkout(_oldTitle);
-                writeWorkout(_workout);
+                await writeWorkout(_workout);
+                unawaited(runAutobackup());
                 _oldTitle = _workout.title;
                 _newWorkout = false;
                 if (!context.mounted) return;
@@ -117,7 +121,8 @@ class BuilderPageState extends State<BuilderPage> {
         ),
       );
     } else {
-      writeWorkout(_workout);
+      await writeWorkout(_workout);
+      unawaited(runAutobackup());
       _newWorkout = false;
       if (!context.mounted) return;
       Fluttertoast.showToast(

@@ -829,6 +829,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.2"
+  saf_util:
+    dependency: "direct main"
+    description:
+      name: saf_util
+      sha256: "7b6b720d14ea39e4e28e794d95ed04b52925ba87b9c8ecd5a99f8dcd6cff6372"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   safe_url_check:
     dependency: transitive
     description:

@@ -7,6 +7,7 @@ import 'package:prefs/prefs.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import '../generated/l10n.dart';
+import '../utils/autobackup_helper.dart';
 import '../utils/languages.dart';
 import '../utils/sound_helper.dart';
 import '../utils/storage_helper.dart';
@@ -23,6 +24,23 @@ class SettingsPage extends StatefulWidget {
 
 class SettingsPageState extends State<SettingsPage> {
   late String _license;
+  bool _autobackupEnabled = false;
+  String _autobackupFolder = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAutobackupState();
+  }
+
+  Future<void> _loadAutobackupState() async {
+    final folderName = await autobackupFolderDisplayName();
+    if (!mounted) return;
+    setState(() {
+      _autobackupEnabled = Prefs.getBool('autobackup_enabled', false);
+      _autobackupFolder = folderName;
+    });
+  }
 
   void _loadLicense() async {
     var lic = await rootBundle.loadString('LICENSE');
@@ -111,6 +129,54 @@ class SettingsPageState extends State<SettingsPage> {
               S.of(context).backup,
             ),
           ),
+          PrefLabel(
+            title: Text(
+              _autobackupEnabled
+                  ? S.of(context).autobackupEnabled
+                  : S.of(context).autobackupDisabled,
+            ),
+            subtitle: _autobackupEnabled && _autobackupFolder.isNotEmpty
+                ? Text(S.of(context).autobackupFolder(_autobackupFolder))
+                : null,
+          ),
+          if (!_autobackupEnabled)
+            PrefLabel(
+              leading: Icon(
+                Icons.warning_amber,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              title: Text(
+                S.of(context).autobackupNotEnabledWarning,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
+          if (!_autobackupEnabled)
+            PrefLabel(
+              title: Text(S.of(context).enableAutobackup),
+              onTap: () async {
+                final ok = await pickAutobackupDirectory();
+                if (ok) {
+                  await Prefs.setBool('autobackup_asked', true);
+                  await _loadAutobackupState();
+                }
+              },
+            ),
+          if (_autobackupEnabled)
+            PrefLabel(
+              title: Text(S.of(context).changeAutobackupFolder),
+              onTap: () async {
+                final ok = await pickAutobackupDirectory();
+                if (ok) await _loadAutobackupState();
+              },
+            ),
+          if (_autobackupEnabled)
+            PrefLabel(
+              title: Text(S.of(context).disableAutobackup),
+              onTap: () async {
+                await disableAutobackup();
+                await _loadAutobackupState();
+              },
+            ),
           PrefLabel(
             title: Text(S.of(context).export),
             onTap: exportAllWorkouts,
