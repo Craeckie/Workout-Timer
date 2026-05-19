@@ -1,3 +1,15 @@
+# [2.1.0](https://github.com/Craeckie/just_another_workout_timer/releases/tag/v2.1.0) (2026-05-19)
+
+### ✨ New Features
+
+* 💾 **Auto-backup** — Opt-in automatic backup to a user-chosen directory. Enable it in Settings to have your workouts saved automatically without manual exports.
+
+### 🐛 Fixes
+
+* 🔧 Added `DocumentFile` dependency so the new backup feature can write to external storage correctly.
+
+---
+
 # [2.0.1](https://github.com/Craeckie/just_another_workout_timer/releases/tag/v2.0.1) (2026-05-16)
 
 ### 🐛 Fixes
