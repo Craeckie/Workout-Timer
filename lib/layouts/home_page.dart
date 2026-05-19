@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:prefs/prefs.dart';
 import 'package:just_another_workout_timer/layouts/workout_runner.dart';
 
 import '../generated/l10n.dart';
+import '../utils/autobackup_helper.dart';
 import '../utils/storage_helper.dart';
 import '../utils/utils.dart';
 import '../utils/workout.dart';
@@ -23,9 +25,37 @@ class HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _maybeAskAutobackup();
       _loadWorkouts();
     });
+  }
+
+  Future<void> _maybeAskAutobackup() async {
+    if (Prefs.getBool('autobackup_asked', false)) return;
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text(S.of(ctx).enableAutobackupPromptTitle),
+        content: Text(S.of(ctx).enableAutobackupPromptBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(S.of(ctx).notNow),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await pickAutobackupDirectory();
+            },
+            child: Text(S.of(ctx).enableAutobackup),
+          ),
+        ],
+      ),
+    );
+    await Prefs.setBool('autobackup_asked', true);
   }
 
   /// load all workouts from disk and populate list

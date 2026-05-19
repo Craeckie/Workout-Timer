@@ -68,15 +68,19 @@ Future<void> shareWorkout(String title) async {
   );
 }
 
-Future<void> exportAllWorkouts() async {
+Future<Uint8List> buildBackupBytes() async {
   var backup = Backup(
     workouts: await getAllWorkouts(),
     history: await loadHistory(),
     settings: await _dumpSettings(),
   );
+  return Uint8List.fromList(utf8.encode(jsonEncode(backup.toJson())));
+}
+
+Future<void> exportAllWorkouts() async {
   final today = DateTime.now().toIso8601String().substring(0, 10);
   final params = SaveFileDialogParams(
-    data: Uint8List.fromList(utf8.encode(jsonEncode(backup.toJson()))),
+    data: await buildBackupBytes(),
     fileName: 'WorkoutTimer_$today.json',
   );
   await FlutterFileDialog.saveFile(params: params);

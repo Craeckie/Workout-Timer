@@ -1,6 +1,23 @@
 {
     "@@locale": "en",
     "addExercise": "Add exercise",
+    "autobackup": "Autobackup",
+    "autobackupEnabled": "Autobackup is on",
+    "autobackupDisabled": "Autobackup is off",
+    "autobackupFolder": "Folder: {name}",
+    "@autobackupFolder": {
+        "placeholders": {
+            "name": { "type": "String" }
+        }
+    },
+    "autobackupNotEnabledWarning": "Your workouts are not being backed up automatically",
+    "enableAutobackup": "Enable autobackup",
+    "changeAutobackupFolder": "Change autobackup folder",
+    "disableAutobackup": "Disable autobackup",
+    "enableAutobackupPromptTitle": "Enable autobackup?",
+    "enableAutobackupPromptBody": "Pick a folder and the app will automatically save a backup after every workout save and completion.",
+    "notNow": "Not now",
+    "autobackupFailed": "Autobackup failed",
     "addRest": "Add rest",
     "addSet": "Add Set",
     "addWorkout": "Add workout",
