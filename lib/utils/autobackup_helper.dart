@@ -32,10 +32,10 @@ Future<String> autobackupFolderDisplayName() async {
   return doc?.name ?? uri.split('%3A').last.split('%2F').last;
 }
 
-Future<void> runAutobackup() async {
-  if (!Prefs.getBool('autobackup_enabled', false)) return;
+Future<bool> runAutobackup() async {
+  if (!Prefs.getBool('autobackup_enabled', false)) return false;
   final treeUri = Prefs.getString('autobackup_uri', '');
-  if (treeUri.isEmpty) return;
+  if (treeUri.isEmpty) return false;
   try {
     final bytes = await buildBackupBytes();
     await _channel.invokeMethod<void>('writeToTree', {
@@ -44,8 +44,10 @@ Future<void> runAutobackup() async {
       'fileName': _backupFileName,
       'mimeType': 'application/json',
     });
+    return true;
   } catch (e) {
     debugPrint('autobackup error: $e');
     Fluttertoast.showToast(msg: 'Autobackup failed');
+    return false;
   }
 }
