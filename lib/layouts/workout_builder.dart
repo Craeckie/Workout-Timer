@@ -302,8 +302,8 @@ class BuilderPageState extends State<BuilderPage> {
                   children: [
                     TextFormField(
                       initialValue: name,
-                      maxLength: 30,
-                      inputFormatters: [LengthLimitingTextInputFormatter(30)],
+                      maxLength: 60,
+                      inputFormatters: [LengthLimitingTextInputFormatter(60)],
                       maxLines: 1,
                       decoration: InputDecoration(
                         labelText: S.of(context).exercise,
