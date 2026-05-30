@@ -14,6 +14,7 @@
     "enableAutobackup": "Enable autobackup",
     "changeAutobackupFolder": "Change autobackup folder",
     "disableAutobackup": "Disable autobackup",
+    "backupNow": "Backup now",
     "enableAutobackupPromptTitle": "Enable autobackup?",
     "enableAutobackupPromptBody": "Pick a folder and the app will automatically save a backup after every workout save and completion.",
     "notNow": "Not now",

@@ -171,6 +171,19 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           if (_autobackupEnabled)
             PrefLabel(
+              title: Text(S.of(context).backupNow),
+              onTap: () async {
+                final ok = await runAutobackup();
+                if (!context.mounted) return;
+                Fluttertoast.showToast(
+                  msg: ok
+                      ? S.of(context).saved
+                      : S.of(context).autobackupFailed,
+                );
+              },
+            ),
+          if (_autobackupEnabled)
+            PrefLabel(
               title: Text(S.of(context).disableAutobackup),
               onTap: () async {
                 await disableAutobackup();
