@@ -52,3 +52,6 @@ lib/oss_licenses.dart
 /release.sh
 /*.apk
 /*.apk.idsig
+# Private workout backups/exports — never publish
+WorkoutTimer_autobackup*.json
+*autobackup*.json
