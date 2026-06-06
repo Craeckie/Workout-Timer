@@ -1,3 +1,11 @@
+# [2.1.2](https://github.com/Craeckie/just_another_workout_timer/releases/tag/v2.1.2) (2026-06-06)
+
+### ✨ Improvements
+
+* ⏮️ **Smarter back button** — pressing back within the first 3 seconds of an exercise jumps to the previous one; after that it restarts the current exercise first.
+* ⏸️ **Navigate while paused** — back and forward buttons now work when the timer is paused, without auto-resuming.
+* 🔲 **Larger control buttons** — all three playback controls are now much bigger for easier tapping on tablets.
+
 # [2.1.0](https://github.com/Craeckie/just_another_workout_timer/releases/tag/v2.1.0) (2026-05-19)
 
 ### ✨ New Features
