@@ -328,13 +328,15 @@ class WorkoutPageState extends State<WorkoutPageContent> {
         floatingActionButton: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            FloatingActionButton(
+            FloatingActionButton.large(
               heroTag: 'FAB1',
-              mini: true,
-              onPressed: timetable.isActive ? timetable.skipBackward : null,
-              child: const Icon(Icons.skip_previous),
+              onPressed: timetable.isInitialized && !timetable.workoutDone
+                  ? timetable.skipBackward
+                  : null,
+              child: const Icon(Icons.skip_previous, size: 40),
             ),
-            FloatingActionButton(
+            const SizedBox(width: 16),
+            FloatingActionButton.large(
               heroTag: 'mainFAB',
               elevation: 8,
               child: Icon(
@@ -343,7 +345,7 @@ class WorkoutPageState extends State<WorkoutPageContent> {
                     : timetable.workoutDone
                         ? Icons.replay
                         : Icons.play_arrow,
-                size: 32,
+                size: 48,
               ),
               onPressed: () {
                 if (timetable.isActive) {
@@ -355,11 +357,13 @@ class WorkoutPageState extends State<WorkoutPageContent> {
                 }
               },
             ),
-            FloatingActionButton(
+            const SizedBox(width: 16),
+            FloatingActionButton.large(
               heroTag: 'FAB2',
-              mini: true,
-              onPressed: timetable.isActive ? timetable.skipForward : null,
-              child: const Icon(Icons.skip_next),
+              onPressed: timetable.isInitialized && !timetable.workoutDone
+                  ? timetable.skipForward
+                  : null,
+              child: const Icon(Icons.skip_next, size: 40),
             ),
           ],
         ),

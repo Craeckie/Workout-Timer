@@ -44,25 +44,33 @@ class Timetable with ChangeNotifier {
   bool get isActive => _timer != null && _timer!.isActive;
 
   void skipForward() {
+    final wasActive = isActive;
     if (nextExercise != null || currentSecond < 10) {
       currentSecond += remainingSeconds - 1;
       timerStop();
       timerStart();
       _timerTick();
+      if (!wasActive) timerStop();
       notifyListeners();
     }
   }
 
   void skipBackward() {
-    if (prevExercise != null) {
-      currentSecond -= (currentExercise.duration - remainingSeconds) +
-          prevExercise!.duration +
-          1;
-      timerStop();
-      timerStart();
-      _timerTick();
-      notifyListeners();
+    if (currentSecond <= 10) return;
+    final wasActive = isActive;
+    final elapsed = currentExercise.duration - remainingSeconds;
+    if (elapsed > 3) {
+      currentSecond -= elapsed + 1;
+    } else if (prevExercise != null) {
+      currentSecond -= elapsed + prevExercise!.duration + 1;
+    } else {
+      return;
     }
+    timerStop();
+    timerStart();
+    _timerTick();
+    if (!wasActive) timerStop();
+    notifyListeners();
   }
 
   void resetWorkout() {
