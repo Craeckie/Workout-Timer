@@ -24,10 +24,26 @@ class HistoryPageState extends State<HistoryPage> {
 
   Future<void> _load() async {
     final entries = await loadHistory();
+    entries.sort((a, b) => b.completedAt.compareTo(a.completedAt));
     setState(() {
       _entries = entries;
       _loaded = true;
     });
+  }
+
+  String _formatDate(DateTime completedAt) {
+    final local = completedAt.toLocal();
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final date = DateTime(local.year, local.month, local.day);
+
+    if (date == today) {
+      return DateFormat('Today, Hm').format(local);
+    } else if (date == today.subtract(const Duration(days: 1))) {
+      return DateFormat('Yesterday, Hm').format(local);
+    } else {
+      return DateFormat.yMMMd().add_Hm().format(local);
+    }
   }
 
   void _confirmClear() {
@@ -54,14 +70,12 @@ class HistoryPageState extends State<HistoryPage> {
     );
   }
 
-  Widget _buildItem(BuildContext context, int displayIndex) {
-    final storageIndex = _entries.length - 1 - displayIndex;
-    final entry = _entries[storageIndex];
-    final formatted =
-        DateFormat.yMMMd().add_Hm().format(entry.completedAt.toLocal());
+  Widget _buildItem(BuildContext context, int index) {
+    final entry = _entries[index];
+    final formatted = _formatDate(entry.completedAt);
     return Dismissible(
       key: ValueKey(
-        '${entry.completedAt.toIso8601String()}-${entry.title}-$storageIndex',
+        '${entry.completedAt.toIso8601String()}-${entry.title}',
       ),
       direction: DismissDirection.endToStart,
       background: Container(
@@ -74,8 +88,8 @@ class HistoryPageState extends State<HistoryPage> {
         ),
       ),
       onDismissed: (_) async {
-        setState(() => _entries.removeAt(storageIndex));
-        await deleteHistoryEntry(storageIndex);
+        setState(() => _entries.removeAt(index));
+        await deleteHistoryEntryByProperties(entry.title, entry.completedAt);
       },
       child: Card(
         child: ListTile(
@@ -85,6 +99,7 @@ class HistoryPageState extends State<HistoryPage> {
       ),
     );
   }
+
 
   @override
   Widget build(BuildContext context) => Scaffold(
