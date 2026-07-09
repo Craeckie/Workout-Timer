@@ -153,7 +153,15 @@ class HomePageState extends State<HomePage> {
     final isNextWorkout = nextWorkoutToHighlight == workout.title;
     return Card(
       key: Key(workout.toJson().toString()),
-      color: isNextWorkout ? Colors.amber.shade100 : null,
+      shape: isNextWorkout
+          ? RoundedRectangleBorder(
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
+              side: BorderSide(
+                color: Colors.amber.shade600,
+                width: 2,
+              ),
+            )
+          : null,
       child: Row(
         children: [
           Container(
@@ -163,11 +171,6 @@ class HomePageState extends State<HomePage> {
               child: const Icon(Icons.drag_handle),
             ),
           ),
-          if (isNextWorkout)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Icon(Icons.arrow_right, color: Colors.amber.shade700),
-            ),
           Expanded(
             child: ListTile(
               title: Text(workout.title),
