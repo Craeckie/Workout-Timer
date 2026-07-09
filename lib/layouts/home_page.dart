@@ -4,6 +4,7 @@ import 'package:just_another_workout_timer/layouts/workout_runner.dart';
 
 import '../generated/l10n.dart';
 import '../utils/autobackup_helper.dart';
+import '../utils/history_helper.dart';
 import '../utils/storage_helper.dart';
 import '../utils/utils.dart';
 import '../utils/workout.dart';
@@ -21,6 +22,7 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
   List<Workout> workouts = [];
+  String? nextWorkoutToHighlight;
 
   @override
   void initState() {
@@ -59,16 +61,41 @@ class HomePageState extends State<HomePage> {
   }
 
   /// load all workouts from disk and populate list
-  _loadWorkouts() async {
+  Future<void> _loadWorkouts() async {
     getAllWorkouts().then(
       (value) => setState(() {
         workouts = value;
         _saveSorting();
+        _determineNextWorkout();
       }),
     );
   }
 
-  _saveSorting() {
+  /// Determine which workout to highlight based on the latest history entry
+  Future<void> _determineNextWorkout() async {
+    final history = await loadHistory();
+    if (history.isEmpty) {
+      setState(() => nextWorkoutToHighlight = null);
+      return;
+    }
+
+    // Get the latest (last) entry
+    final latestEntry = history.last;
+    final latestWorkoutTitle = latestEntry.title;
+
+    // Find the position of the latest completed workout
+    final latestIndex = workouts.indexWhere((w) => w.title == latestWorkoutTitle);
+    if (latestIndex == -1) {
+      setState(() => nextWorkoutToHighlight = null);
+      return;
+    }
+
+    // Determine the next workout (wrap around if at the end)
+    final nextIndex = (latestIndex + 1) % workouts.length;
+    setState(() => nextWorkoutToHighlight = workouts[nextIndex].title);
+  }
+
+  void _saveSorting() {
     for (var workout in workouts.asMap().entries) {
       workout.value.position = workout.key;
       writeWorkout(workout.value);
@@ -76,7 +103,7 @@ class HomePageState extends State<HomePage> {
   }
 
   /// aks user if they want to delete a workout
-  _showDeleteDialog(BuildContext context, Workout workout) {
+  void _showDeleteDialog(BuildContext context, Workout workout) {
     // set up the buttons
     Widget cancelButton = TextButton(
       child: Text(S.of(context).cancel),
@@ -122,71 +149,80 @@ class HomePageState extends State<HomePage> {
         children: workouts.map(_buildWorkoutItem).toList(),
       );
 
-  Widget _buildWorkoutItem(Workout workout) => Card(
-        key: Key(workout.toJson().toString()),
-        child: Row(
-          children: [
+  Widget _buildWorkoutItem(Workout workout) {
+    final isNextWorkout = nextWorkoutToHighlight == workout.title;
+    return Card(
+      key: Key(workout.toJson().toString()),
+      color: isNextWorkout ? Colors.amber.shade100 : null,
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: ReorderableDragStartListener(
+              index: workout.position,
+              child: const Icon(Icons.drag_handle),
+            ),
+          ),
+          if (isNextWorkout)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: ReorderableDragStartListener(
-                index: workout.position,
-                child: const Icon(Icons.drag_handle),
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Icon(Icons.arrow_right, color: Colors.amber.shade700),
+            ),
+          Expanded(
+            child: ListTile(
+              title: Text(workout.title),
+              subtitle: Text(
+                S
+                    .of(context)
+                    .durationWithTime(Utils.formatSeconds(workout.duration)),
               ),
             ),
-            Expanded(
-              child: ListTile(
-                title: Text(workout.title),
-                subtitle: Text(
-                  S
-                      .of(context)
-                      .durationWithTime(Utils.formatSeconds(workout.duration)),
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit),
+            tooltip: S.of(context).editWorkout,
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      BuilderPage(workout: workout, newWorkout: false),
                 ),
-              ),
-            ),
-            IconButton(
-              icon: const Icon(Icons.edit),
-              tooltip: S.of(context).editWorkout,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        BuilderPage(workout: workout, newWorkout: false),
+              ).then((value) => _loadWorkouts());
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.play_circle_fill),
+            tooltip: S.of(context).startWorkout,
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => WorkoutPage(
+                    workout: workout,
                   ),
-                ).then((value) => _loadWorkouts());
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.play_circle_fill),
-              tooltip: S.of(context).startWorkout,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => WorkoutPage(
-                      workout: workout,
-                    ),
-                  ),
-                ).then((value) => _loadWorkouts());
-              },
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete),
-              tooltip: S.of(context).deleteWorkout,
-              onPressed: () {
-                _showDeleteDialog(context, workout);
-              },
-            ),
-            IconButton(
-              tooltip: S.of(context).shareWorkout,
-              onPressed: () {
-                shareWorkout(workout.title);
-              },
-              icon: const Icon(Icons.share),
-            ),
-          ],
-        ),
-      );
+                ),
+              ).then((value) => _loadWorkouts());
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            tooltip: S.of(context).deleteWorkout,
+            onPressed: () {
+              _showDeleteDialog(context, workout);
+            },
+          ),
+          IconButton(
+            tooltip: S.of(context).shareWorkout,
+            onPressed: () {
+              shareWorkout(workout.title);
+            },
+            icon: const Icon(Icons.share),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
