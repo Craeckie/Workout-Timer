@@ -1,3 +1,17 @@
+# [2.2.0](https://github.com/Craeckie/just_another_workout_timer/releases/tag/v2.2.0) (2026-07-09)
+
+### ✨ New Features
+
+* 🎯 **Highlight next workout** — The app now highlights your next scheduled workout based on your completion history, making it easy to see what's coming up.
+* 📅 **Relative dates in history** — Workout completions now display relative dates (Today, Yesterday, etc.) instead of absolute dates for quick scanning.
+
+### 🐛 Fixes
+
+* 🎨 Improved styling of the next workout highlight for better visual clarity.
+* 📆 Corrected date format for Today/Yesterday labels in the history view.
+
+---
+
 # [2.1.2](https://github.com/Craeckie/just_another_workout_timer/releases/tag/v2.1.2) (2026-06-06)
 
 ### ✨ Improvements
