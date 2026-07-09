@@ -61,6 +61,17 @@ Future<void> deleteHistoryEntry(int index) async {
   await _writeHistory(entries);
 }
 
+Future<void> deleteHistoryEntryByProperties(
+  String title,
+  DateTime completedAt,
+) async {
+  final entries = await loadHistory();
+  entries.removeWhere(
+    (e) => e.title == title && e.completedAt == completedAt,
+  );
+  await _writeHistory(entries);
+}
+
 Future<void> clearHistory() async {
   final file = await _historyFile();
   if (await file.exists()) await file.delete();
