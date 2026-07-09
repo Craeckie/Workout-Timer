@@ -36,11 +36,12 @@ class HistoryPageState extends State<HistoryPage> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final date = DateTime(local.year, local.month, local.day);
+    final timeFormat = DateFormat.Hm();
 
     if (date == today) {
-      return DateFormat('Today, Hm').format(local);
+      return "Today, ${timeFormat.format(local)}";
     } else if (date == today.subtract(const Duration(days: 1))) {
-      return DateFormat('Yesterday, Hm').format(local);
+      return "Yesterday, ${timeFormat.format(local)}";
     } else {
       return DateFormat.yMMMd().add_Hm().format(local);
     }
