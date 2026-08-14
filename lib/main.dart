@@ -30,7 +30,6 @@ void main() async {
       'ticks': false,
       'tts_next_announce': true,
       'sound': 'tts',
-      'expanded_setlist': false,
     },
   ).then(
     (service) => Future.wait([

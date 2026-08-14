@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:just_another_workout_timer/utils/timetable.dart';
 import 'package:prefs/prefs.dart';
@@ -6,6 +8,8 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../generated/l10n.dart';
+import '../utils/run_plan.dart';
+import '../utils/run_progress_rail.dart';
 import '../utils/utils.dart';
 import '../utils/workout.dart';
 
@@ -69,68 +73,99 @@ class WorkoutPageState extends State<WorkoutPageContent> {
     });
   }
 
-  Widget _buildCurrentSetList(Set? set) {
-    if (set == null) return Container();
-
-    var list = ScrollablePositionedList.builder(
-      itemBuilder: (context, index) => _buildSetItem(
-        set.exercises[index],
-        set.exercises.indexOf(timetable.currentExercise) == index,
-      ),
-      itemCount: set.exercises.length,
-      itemScrollController: _itemScrollController,
-      itemPositionsListener: _itemPositionsListener,
-      shrinkWrap: true,
-    );
-
-    if (!Prefs.getBool('expanded_setlist', false)) {
-      return SizedBox(
-        height: 217,
-        child: list,
-      );
-    } else {
-      return list;
-    }
-  }
-
-  Widget _buildNextSetList(Set? set) {
-    if (set == null) return Container();
-
-    return SizedBox(
-      height: 217,
-      child: ListView.builder(
-        itemBuilder: (context, index) {
-          if (index < set.exercises.length) {
-            return _buildSetItem(
-              set.exercises[index],
-              set.exercises.indexOf(timetable.currentExercise) == index,
-            );
-          } else {
-            return Container();
-          }
-        },
-        itemCount: set.exercises.length,
-        primary: false,
-        shrinkWrap: true,
-      ),
-    );
-  }
-
   bool get _isBlackTheme =>
       Theme.of(context).scaffoldBackgroundColor == Colors.black;
 
-  Widget _buildSetItem(Exercise exercise, bool active) => ListTile(
-        tileColor: active
-            ? Theme.of(context).primaryColor
-            : (_isBlackTheme ? Colors.transparent : Theme.of(context).focusColor),
-        textColor: !active && _isBlackTheme ? Colors.white70 : null,
-        title: Text(exercise.name),
-        subtitle: Text(
-          S
-              .of(context)
-              .durationWithTime(Utils.formatSeconds(exercise.duration)),
+  Widget _buildRepIndicator(int rep, int repCount) {
+    if (repCount <= 1) return const SizedBox.shrink();
+    if (repCount > 8) {
+      return Text(
+        S.of(context).repOf(rep + 1, repCount),
+        style: const TextStyle(fontSize: 14),
+      );
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(
+        repCount,
+        (i) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          child: Icon(
+            i == rep ? Icons.circle : Icons.circle_outlined,
+            size: 8,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeroContext() {
+    final setIndex = _workout.sets.indexOf(timetable.currentSet);
+    final repCount = timetable.currentSet.repetitions;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          S.of(context).setOf(setIndex + 1, _workout.sets.length),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+        ),
+        if (repCount > 1) ...[
+          const SizedBox(width: 8),
+          const Text('·'),
+          const SizedBox(width: 8),
+          _buildRepIndicator(timetable.currentReps, repCount),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildHeaderRow(TimelineHeaderRow row) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+        child: Text(
+          row.repCount > 1
+              ? '${S.of(context).setIndex(row.setIndex + 1)} · '
+                  '${S.of(context).repOf(row.rep + 1, row.repCount)}'
+              : S.of(context).setIndex(row.setIndex + 1),
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
       );
+
+  Widget _buildStepRow(TimelineStepRow row) {
+    final isDone = row.stepIndex < timetable.currentStepIndex ||
+        (timetable.workoutDone && row.stepIndex <= timetable.currentStepIndex);
+    final isCurrent =
+        !timetable.workoutDone && row.stepIndex == timetable.currentStepIndex;
+
+    final tileColor = isCurrent
+        ? Theme.of(context).primaryColor
+        : (_isBlackTheme ? Colors.transparent : Theme.of(context).focusColor);
+    final textColor = isDone
+        ? Theme.of(context).disabledColor
+        : (!isCurrent && _isBlackTheme ? Colors.white70 : null);
+
+    return ListTile(
+      dense: true,
+      tileColor: tileColor,
+      textColor: textColor,
+      leading: isDone ? const Icon(Icons.check, size: 18) : null,
+      title: Text(row.step.exercise.name),
+      subtitle: Text(
+        S.of(context).durationWithTime(
+              Utils.formatSeconds(row.step.exercise.duration),
+            ),
+      ),
+    );
+  }
+
+  Widget _buildTimelineRow(TimelineRow row) => switch (row) {
+        TimelineHeaderRow() => _buildHeaderRow(row),
+        TimelineStepRow() => _buildStepRow(row),
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -184,19 +219,8 @@ class WorkoutPageState extends State<WorkoutPageContent> {
                 child: ListTile(
                   title: Text(
                     S.of(context).exerciseOf(
-                          timetable.currentSet.exercises
-                                  .indexOf(timetable.currentExercise) +
-                              1 +
-                              (timetable.currentReps *
-                                  timetable.currentSet.exercises.length),
-                          timetable.currentSet.exercises.length *
-                              timetable.currentSet.repetitions,
-                        ),
-                  ),
-                  subtitle: Text(
-                    S.of(context).repOf(
-                          timetable.currentReps + 1,
-                          timetable.currentSet.repetitions,
+                          timetable.currentStepIndex + 1,
+                          timetable.plan.steps.length,
                         ),
                   ),
                 ),
@@ -205,13 +229,6 @@ class WorkoutPageState extends State<WorkoutPageContent> {
               Expanded(
                 child: ListTile(
                   title: Text(
-                    S.of(context).setOf(
-                          _workout.sets.indexOf(timetable.currentSet) + 1,
-                          _workout.sets.length,
-                        ),
-                    textAlign: TextAlign.end,
-                  ),
-                  subtitle: Text(
                     S.of(context).durationLeft(
                           Utils.formatSeconds(
                             _workout.duration - timetable.currentSecond + 10,
@@ -227,100 +244,56 @@ class WorkoutPageState extends State<WorkoutPageContent> {
         ),
         body: Column(
           children: [
-            // top card with current exercise
+            // hero card with current exercise
             Card(
-              child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Column(
                   children: [
+                    _buildHeroContext(),
+                    const SizedBox(height: 4),
                     Text(
-                      '${S.of(context).setIndex(_workout.sets.indexOf(timetable.currentSet) + 1)} - ${Utils.formatSeconds(timetable.remainingSeconds)}',
+                      Utils.formatSeconds(timetable.remainingSeconds),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 48,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    LinearProgressIndicator(
-                      value: timetable.remainingSeconds /
-                          (timetable.currentSecond < 10
-                              ? 10
-                              : timetable.currentExercise.duration),
-                      minHeight: 6,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Theme.of(context).colorScheme.secondary,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 8,
+                      ),
+                      child: RunProgressRail(
+                        plan: timetable.plan,
+                        elapsedSeconds:
+                            math.max(0, timetable.currentSecond - 10),
                       ),
                     ),
                     Text(
                       timetable.currentExercise.name,
                       style: const TextStyle(
-                        fontSize: 48,
+                        fontSize: 32,
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    timetable.nextExercise != null
-                        ? Text(
-                            S.of(context).nextExercise(
-                                  timetable.nextExercise?.name ?? '',
-                                ),
-                            style: const TextStyle(fontSize: 24),
-                            textAlign: TextAlign.center,
-                          )
-                        : Container(),
                   ],
                 ),
               ),
             ),
+            // remaining run: every set, every repetition, every exercise
             Expanded(
-              child: ListView(
-                children: [
-                  // card with current set
-                  Card(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Text(
-                            S.of(context).currentSet,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        _buildCurrentSetList(timetable.currentSet),
-                      ],
-                    ),
-                  ),
-                  // card with next set
-                  timetable.nextSet != null
-                      ? Card(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ListTile(
-                                title: Text(
-                                  S.of(context).nextSet,
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                subtitle: timetable.nextSet != null
-                                    ? Text(
-                                        S.of(context).countRepetitions(
-                                              timetable.nextSet!.repetitions,
-                                            ),
-                                      )
-                                    : null,
-                              ),
-                              _buildNextSetList(timetable.nextSet),
-                            ],
-                          ),
-                        )
-                      : const Column(),
-                ],
+              child: Card(
+                margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                child: ScrollablePositionedList.builder(
+                  itemBuilder: (context, index) =>
+                      _buildTimelineRow(timetable.plan.rows[index]),
+                  itemCount: timetable.plan.rows.length,
+                  itemScrollController: _itemScrollController,
+                  itemPositionsListener: _itemPositionsListener,
+                ),
               ),
             ),
           ],
