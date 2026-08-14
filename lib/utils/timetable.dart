@@ -4,6 +4,7 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'autobackup_helper.dart';
 import 'history_helper.dart';
+import 'run_plan.dart';
 import 'sound_helper.dart';
 import 'package:just_another_workout_timer/utils/tts_helper.dart';
 import 'workout.dart';
@@ -20,6 +21,9 @@ class Timetable with ChangeNotifier {
   Timetable(this._context, this._workout);
 
   Timer? _timer;
+
+  late RunPlan plan;
+  int currentStepIndex = 0;
 
   late Set currentSet;
   late Exercise currentExercise;
@@ -95,11 +99,14 @@ class Timetable with ChangeNotifier {
   }
 
   void buildTimetable() {
+    plan = RunPlan.of(_workout);
+    currentStepIndex = 0;
+
     // init values
-    currentSet = _workout.sets[0];
-    currentExercise = _workout.sets[0].exercises[0];
+    currentSet = plan.steps[0].set;
+    currentExercise = plan.steps[0].exercise;
     prevExercise = null;
-    nextExercise = null;
+    nextExercise = plan.steps.length > 1 ? plan.steps[1].exercise : null;
     nextSet = _workout.sets.length > 1 ? _workout.sets[1] : null;
 
     /// current timestamp
@@ -108,7 +115,7 @@ class Timetable with ChangeNotifier {
     // announce first exercise
     _timetable[1] = () {
       TTSHelper.speak(
-        S.of(_context).firstExercise(_workout.sets[0].exercises[0].name),
+        S.of(_context).firstExercise(plan.steps[0].exercise.name),
       );
     };
 
@@ -128,138 +135,100 @@ class Timetable with ChangeNotifier {
       SoundHelper.playBeepLow();
     };
 
-    _workout.sets.asMap().forEach((setIndex, set) {
-      var setMap = <int, Function>{};
+    for (var i = 0; i < plan.steps.length; i++) {
+      final step = plan.steps[i];
+      final exercise = step.exercise;
+      final set = step.set;
 
-      for (var rep = 0; rep < set.repetitions; rep++) {
-        set.exercises.asMap().forEach((exIndex, exercise) {
-          Set? locNextSet;
-          Exercise? locNextExercise;
-          Exercise? locPrevExercise;
+      final locNextExercise =
+          i + 1 < plan.steps.length ? plan.steps[i + 1].exercise : null;
+      final locPrevExercise = i > 0 ? plan.steps[i - 1].exercise : null;
+      final locNextSet = step.setIndex + 1 < _workout.sets.length
+          ? _workout.sets[step.setIndex + 1]
+          : null;
 
-          // case: exercise is somewhere in set
-          if (exIndex + 1 < set.exercises.length) {
-            locNextExercise = set.exercises[exIndex + 1];
-            if (setIndex + 1 < _workout.sets.length) {
-              locNextSet = _workout.sets[setIndex + 1];
-            }
-          }
-          // case: exercise is last in set but set has remaining reps
-          else if (exIndex + 1 == set.exercises.length &&
-              rep < set.repetitions - 1) {
-            locNextExercise = set.exercises.first;
-          }
-          // case: exercise is last in set and set is completed
-          else if (setIndex + 1 < _workout.sets.length) {
-            locNextExercise = _workout.sets[setIndex + 1].exercises.first;
-          } else {
-            locNextExercise = null;
-          }
-
-          // case: exercise is somewhere in set
-          if (exIndex - 1 >= 0) {
-            locPrevExercise = set.exercises[exIndex - 1];
-          }
-          // case: exercise is first in set and not in first rep
-          else if (exIndex == 0 && rep > 0) {
-            locPrevExercise = set.exercises.last;
-          }
-          // case: exercise is first in set and first rep
-          else if (exIndex == 0 && rep == 0 && setIndex > 0) {
-            locPrevExercise = _workout.sets[setIndex - 1].exercises.last;
-          } else {
-            locPrevExercise = null;
-          }
-
-          // announce next exercise
-          if ((Prefs.getString('sound') == 'tts' &&
-                  Prefs.getBool('tts_next_announce')) &&
-              exercise.duration >= 10) {
-            setMap[currentTime + exercise.duration - 9] = () {
-              if (locNextExercise != null) {
-                TTSHelper.speak(
-                  S.of(_context).nextExercise(locNextExercise.name),
-                );
-              }
-            };
-          } else if (currentSecond > 10 && Prefs.getBool('ticks')) {
-            SoundHelper.playBeepTick();
-          }
-
-          // set next set
-          if (setIndex + 1 < _workout.sets.length) {
-            locNextSet = _workout.sets[setIndex + 1];
-          }
-
-          if (exercise.duration >= 10 && Prefs.getBool('halftime')) {
-            setMap[(currentTime + exercise.duration / 2).round()] = () {
-              if (Prefs.getString('sound') == 'beep') {
-                SoundHelper.playDouble();
-              } else if (!TTSHelper.isTalking &&
-                  Prefs.getString('sound') == 'tts') {
-                TTSHelper.speak(S.of(_context).halfwayDone);
-              }
-            };
-          }
-
-          // countdown to next exercise
-          setMap[currentTime + exercise.duration - 3] = () {
-            TTSHelper.speak('3');
-            SoundHelper.playBeepLow();
-          };
-
-          setMap[currentTime + exercise.duration - 2] = () {
-            TTSHelper.speak('2');
-            SoundHelper.playBeepLow();
-          };
-
-          setMap[currentTime + exercise.duration - 1] = () {
-            TTSHelper.speak('1');
-            SoundHelper.playBeepLow();
-          };
-
-          // update display and announce current exercise
-          setMap[currentTime] = () {
-            itemScrollController.scrollTo(
-              index: exIndex - 1 > 0 ? exIndex - 1 : 0,
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.easeInOutCubic,
+      // announce next exercise
+      if ((Prefs.getString('sound') == 'tts' &&
+              Prefs.getBool('tts_next_announce')) &&
+          exercise.duration >= 10) {
+        _timetable[currentTime + exercise.duration - 9] = () {
+          if (locNextExercise != null) {
+            TTSHelper.speak(
+              S.of(_context).nextExercise(locNextExercise.name),
             );
-            remainingSeconds = exercise.duration;
-            if (currentSet == set) {
-              SoundHelper.playBeepHigh();
-            } else {
-              SoundHelper.playTriple();
-            }
-            currentSet = set;
-            prevExercise = locPrevExercise;
-            nextExercise = locNextExercise;
-            currentExercise = exercise;
-            nextSet = locNextSet;
-            currentReps = rep;
-            TTSHelper.speak(exercise.name);
-          };
-          currentTime += exercise.duration;
-          notifyListeners();
-        });
+          }
+        };
+      } else if (currentSecond > 10 && Prefs.getBool('ticks')) {
+        SoundHelper.playBeepTick();
       }
 
-      // announce completed workout
-      _timetable[currentTime] = () {
-        timerStop();
-        TTSHelper.speak(S.of(_context).workoutComplete);
+      if (exercise.duration >= 10 && Prefs.getBool('halftime')) {
+        _timetable[(currentTime + exercise.duration / 2).round()] = () {
+          if (Prefs.getString('sound') == 'beep') {
+            SoundHelper.playDouble();
+          } else if (!TTSHelper.isTalking &&
+              Prefs.getString('sound') == 'tts') {
+            TTSHelper.speak(S.of(_context).halfwayDone);
+          }
+        };
+      }
 
-        workoutDone = true;
-        currentExercise =
-            Exercise(name: S.of(_context).workoutComplete, duration: 1);
-        appendHistoryEntry(_workout.title).then((_) => runAutobackup());
-        notifyListeners();
+      // countdown to next exercise
+      _timetable[currentTime + exercise.duration - 3] = () {
+        TTSHelper.speak('3');
+        SoundHelper.playBeepLow();
       };
 
-      _timetable.addAll(setMap);
-      isInitialized = true;
-      //notifyListeners();
-    });
+      _timetable[currentTime + exercise.duration - 2] = () {
+        TTSHelper.speak('2');
+        SoundHelper.playBeepLow();
+      };
+
+      _timetable[currentTime + exercise.duration - 1] = () {
+        TTSHelper.speak('1');
+        SoundHelper.playBeepLow();
+      };
+
+      // update display and announce current exercise
+      _timetable[currentTime] = () {
+        itemScrollController.scrollTo(
+          index: plan.rowIndexOfStep(i),
+          alignment: 0.25,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOutCubic,
+        );
+        remainingSeconds = exercise.duration;
+        if (currentSet == set) {
+          SoundHelper.playBeepHigh();
+        } else {
+          SoundHelper.playTriple();
+        }
+        currentSet = set;
+        prevExercise = locPrevExercise;
+        nextExercise = locNextExercise;
+        currentExercise = exercise;
+        nextSet = locNextSet;
+        currentReps = step.rep;
+        currentStepIndex = i;
+        TTSHelper.speak(exercise.name);
+      };
+      currentTime += exercise.duration;
+      notifyListeners();
+    }
+
+    // announce completed workout
+    _timetable[currentTime] = () {
+      timerStop();
+      TTSHelper.speak(S.of(_context).workoutComplete);
+
+      workoutDone = true;
+      currentExercise =
+          Exercise(name: S.of(_context).workoutComplete, duration: 1);
+      appendHistoryEntry(_workout.title).then((_) => runAutobackup());
+      notifyListeners();
+    };
+
+    isInitialized = true;
   }
 
   void timerStart() {
