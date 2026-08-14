@@ -119,11 +119,6 @@ class SettingsPageState extends State<SettingsPage> {
             title: Text(S.of(context).playTickEverySecond),
             pref: 'ticks',
           ),
-          PrefSwitch(
-            title: Text(S.of(context).expanded_setlist),
-            subtitle: Text(S.of(context).expanded_setlist_info),
-            pref: 'expanded_setlist',
-          ),
           PrefTitle(
             title: Text(
               S.of(context).backup,
