@@ -167,12 +167,45 @@ class WorkoutPageState extends State<WorkoutPageContent> {
         TimelineStepRow() => _buildStepRow(row),
       };
 
+  void _showExitDialog() {
+    showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Text(S.of(context).exitCheck),
+        actions: <Widget>[
+          TextButton(
+            child: Text(S.of(context).no),
+            onPressed: () {
+              Navigator.of(context).pop(false);
+            },
+          ),
+          TextButton(
+            child: Text(S.of(context).yesExit),
+            onPressed: () {
+              Navigator.of(context).pop(true);
+            },
+          ),
+        ],
+      ),
+    ).then((value) {
+      if (value == true && mounted) {
+        Navigator.of(context).pop();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!timetable.isInitialized) {
       return Container();
     }
-    return WillPopScope(
+    return PopScope(
+      canPop: timetable.canQuit,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          _showExitDialog();
+        }
+      },
       child: Scaffold(
         appBar: AppBar(
           title: Text(_workout.title),
@@ -378,35 +411,6 @@ class WorkoutPageState extends State<WorkoutPageContent> {
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       ),
-      onWillPop: () async {
-        // Just pop if the workout wasn't started yet or is already done
-        if (timetable.canQuit) {
-          return true;
-        }
-
-        final value = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            content: Text(S.of(context).exitCheck),
-            actions: <Widget>[
-              TextButton(
-                child: Text(S.of(context).no),
-                onPressed: () {
-                  Navigator.of(context).pop(false);
-                },
-              ),
-              TextButton(
-                child: Text(S.of(context).yesExit),
-                onPressed: () {
-                  Navigator.of(context).pop(true);
-                },
-              ),
-            ],
-          ),
-        );
-
-        return value == true;
-      },
     );
   }
 }

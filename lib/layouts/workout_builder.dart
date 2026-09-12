@@ -213,7 +213,7 @@ class BuilderPageState extends State<BuilderPage> {
                 ],
               ),
               _buildExerciseList(set, index),
-              ButtonBar(
+              OverflowBar(
                 alignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
@@ -360,35 +360,40 @@ class BuilderPageState extends State<BuilderPage> {
         ),
       );
 
+  void _showExitDialog() {
+    showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Text(S.of(context).exitCheck),
+        actions: <Widget>[
+          TextButton(
+            child: Text(S.of(context).no),
+            onPressed: () {
+              Navigator.of(context).pop(false);
+            },
+          ),
+          TextButton(
+            child: Text(S.of(context).yesExit),
+            onPressed: () {
+              Navigator.of(context).pop(true);
+            },
+          ),
+        ],
+      ),
+    ).then((value) {
+      if (value == true && mounted) {
+        Navigator.of(context).pop();
+      }
+    });
+  }
+
   @override
-  Widget build(BuildContext context) => WillPopScope(
-        onWillPop: () async {
-          if (!_dirty) {
-            return true;
+  Widget build(BuildContext context) => PopScope(
+        canPop: !_dirty,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop) {
+            _showExitDialog();
           }
-
-          final value = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              content: Text(S.of(context).exitCheck),
-              actions: <Widget>[
-                TextButton(
-                  child: Text(S.of(context).no),
-                  onPressed: () {
-                    Navigator.of(context).pop(false);
-                  },
-                ),
-                TextButton(
-                  child: Text(S.of(context).yesExit),
-                  onPressed: () {
-                    Navigator.of(context).pop(true);
-                  },
-                ),
-              ],
-            ),
-          );
-
-          return value!;
         },
         child: Scaffold(
           appBar: AppBar(
