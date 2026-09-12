@@ -210,53 +210,66 @@ class WorkoutPageState extends State<WorkoutPageContent> {
               ),
           ],
         ),
-        bottomNavigationBar: BottomAppBar(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // clears the large centerDocked FAB, which straddles the top
-              // edge of this bar and would otherwise cover the rail
-              const SizedBox(height: 56),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: RunProgressRail(
-                  plan: timetable.plan,
-                  elapsedSeconds: math.max(0, timetable.currentSecond - 10),
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        // Not BottomAppBar: in Material 3 it forces a fixed 80px SizedBox
+        // around its child regardless of content, which silently clips this
+        // bar's taller content (FAB clearance + rail + footer row) instead
+        // of growing to fit it.
+        bottomNavigationBar: Material(
+          color: Theme.of(context).colorScheme.surfaceContainer,
+          elevation: 3,
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // left side of footer
-                  Expanded(
-                    child: ListTile(
-                      title: Text(
-                        S.of(context).exerciseOf(
-                              timetable.currentStepIndex + 1,
-                              timetable.plan.steps.length,
-                            ),
-                      ),
+                  // clears the large centerDocked FAB, which straddles the
+                  // top edge of this bar and would otherwise cover the rail
+                  const SizedBox(height: 56),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: RunProgressRail(
+                      plan: timetable.plan,
+                      elapsedSeconds:
+                          math.max(0, timetable.currentSecond - 10),
                     ),
                   ),
-                  // right side of footer
-                  Expanded(
-                    child: ListTile(
-                      title: Text(
-                        S.of(context).durationLeft(
-                              Utils.formatSeconds(
-                                _workout.duration -
-                                    timetable.currentSecond +
-                                    10,
-                              ),
-                              Utils.formatSeconds(_workout.duration + 10),
-                            ),
-                        textAlign: TextAlign.end,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // left side of footer
+                      Expanded(
+                        child: ListTile(
+                          title: Text(
+                            S.of(context).exerciseOf(
+                                  timetable.currentStepIndex + 1,
+                                  timetable.plan.steps.length,
+                                ),
+                          ),
+                        ),
                       ),
-                    ),
+                      // right side of footer
+                      Expanded(
+                        child: ListTile(
+                          title: Text(
+                            S.of(context).durationLeft(
+                                  Utils.formatSeconds(
+                                    _workout.duration -
+                                        timetable.currentSecond +
+                                        10,
+                                  ),
+                                  Utils.formatSeconds(_workout.duration + 10),
+                                ),
+                            textAlign: TextAlign.end,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
         body: Column(
