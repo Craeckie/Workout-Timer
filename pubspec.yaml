@@ -45,6 +45,7 @@ dev_dependencies:
     sdk: flutter
   intl_utils: '^2.8.14'
   json_serializable: '^6.14.0'
+  path_provider_platform_interface: '^2.1.2'
   pubspec_dependency_sorter: '^1.0.5'
 
 flutter:

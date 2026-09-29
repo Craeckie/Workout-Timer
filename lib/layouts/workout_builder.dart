@@ -16,10 +16,14 @@ class BuilderPage extends StatefulWidget {
   final Workout workout;
   final bool newWorkout;
 
+  /// existing categories, offered as suggestions
+  final List<String> categories;
+
   const BuilderPage({
     super.key,
     required this.workout,
     required this.newWorkout,
+    this.categories = const [],
   });
 
   @override
@@ -87,6 +91,7 @@ class BuilderPageState extends State<BuilderPage> {
 
     setState(() {
       _workout.cleanUp();
+      _workout.category = _workout.category.trim();
     });
 
     if ((_newWorkout && await workoutExists(_workout.title)) ||
@@ -154,7 +159,37 @@ class BuilderPageState extends State<BuilderPage> {
     });
   }
 
+  Widget _buildCategoryField() => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+        child: Autocomplete<String>(
+          initialValue: TextEditingValue(text: _workout.category),
+          optionsBuilder: (value) => widget.categories.where(
+            (c) =>
+                c != value.text &&
+                c.toLowerCase().contains(value.text.toLowerCase()),
+          ),
+          onSelected: (category) => setState(() {
+            _workout.category = category;
+            _dirty = true;
+          }),
+          fieldViewBuilder: (context, controller, focusNode, onSubmitted) =>
+              TextField(
+            controller: controller,
+            focusNode: focusNode,
+            maxLines: 1,
+            inputFormatters: [LengthLimitingTextInputFormatter(30)],
+            decoration: InputDecoration(labelText: S.of(context).category),
+            onChanged: (text) {
+              _workout.category = text;
+              _dirty = true;
+            },
+            onSubmitted: (_) => onSubmitted(),
+          ),
+        ),
+      );
+
   Widget _buildSetList() => ReorderableListView(
+        header: _buildCategoryField(),
         onReorder: (oldIndex, newIndex) {
           if (oldIndex < newIndex) {
             newIndex -= 1;

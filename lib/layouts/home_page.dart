@@ -8,6 +8,7 @@ import '../utils/history_helper.dart';
 import '../utils/storage_helper.dart';
 import '../utils/utils.dart';
 import '../utils/workout.dart';
+import '../utils/workout_groups.dart';
 import 'history_page.dart';
 import 'settings_page.dart';
 import 'workout_builder.dart';
@@ -22,7 +23,13 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
   List<Workout> workouts = [];
+  List<WorkoutGroup> groups = [];
   String? nextWorkoutToHighlight;
+
+  /// Categories whose section is open. Filled once per app start with the
+  /// category of the next workout; afterwards only the user toggles it.
+  final _expanded = <String>{};
+  bool _expansionInitialized = false;
 
   @override
   void initState() {
@@ -64,36 +71,38 @@ class HomePageState extends State<HomePage> {
   Future<void> _loadWorkouts() async {
     getAllWorkouts().then(
       (value) => setState(() {
-        workouts = value;
+        groups = WorkoutGroups.group(value);
+        workouts = WorkoutGroups.flatten(groups);
         _saveSorting();
         _determineNextWorkout();
       }),
     );
   }
 
-  /// Determine which workout to highlight based on the latest history entry
+  /// Determine which workout to highlight based on the latest history entry:
+  /// the one after it within the same category.
   Future<void> _determineNextWorkout() async {
     final history = await loadHistory();
-    if (history.isEmpty) {
-      setState(() => nextWorkoutToHighlight = null);
-      return;
-    }
-
-    // Get the latest (last) entry
-    final latestEntry = history.last;
-    final latestWorkoutTitle = latestEntry.title;
-
-    // Find the position of the latest completed workout
-    final latestIndex = workouts.indexWhere((w) => w.title == latestWorkoutTitle);
-    if (latestIndex == -1) {
-      setState(() => nextWorkoutToHighlight = null);
-      return;
-    }
-
-    // Determine the next workout (wrap around if at the end)
-    final nextIndex = (latestIndex + 1) % workouts.length;
-    setState(() => nextWorkoutToHighlight = workouts[nextIndex].title);
+    final next = WorkoutGroups.nextWorkout(
+      groups,
+      history.isEmpty ? null : history.last.title,
+    );
+    if (!mounted) return;
+    setState(() {
+      if (next != null && next.title != nextWorkoutToHighlight) {
+        _expanded.add(next.category);
+      } else if (!_expansionInitialized && groups.isNotEmpty) {
+        _expanded.add(groups.first.category);
+      }
+      _expansionInitialized = true;
+      nextWorkoutToHighlight = next?.title;
+    });
   }
+
+  List<String> get _categories => [
+        for (final group in groups)
+          if (group.category.isNotEmpty) group.category,
+      ];
 
   void _saveSorting() {
     for (var workout in workouts.asMap().entries) {
@@ -135,21 +144,112 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildWorkoutList() => ReorderableListView(
+  void _renameCategory(BuildContext context, String category) {
+    final controller = TextEditingController(text: category);
+    showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(S.of(context).renameCategory),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(labelText: S.of(context).category),
+          onSubmitted: (value) => Navigator.of(context).pop(value),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(S.of(context).cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(controller.text),
+            child: Text(S.of(context).rename),
+          ),
+        ],
+      ),
+    ).then((value) async {
+      final name = value?.trim() ?? '';
+      if (name.isEmpty || name == category) return;
+      for (final workout in workouts.where((w) => w.category == category)) {
+        workout.category = name;
+        await writeWorkout(workout);
+      }
+      if (_expanded.remove(category)) _expanded.add(name);
+      _loadWorkouts();
+    });
+  }
+
+  Widget _buildWorkoutList() {
+    // Without any categories the list looks as it did before them.
+    if (groups.length == 1 && groups.first.category.isEmpty) {
+      return CustomScrollView(
+        slivers: [_buildGroupList(groups.first), _listEndSpace],
+      );
+    }
+    return CustomScrollView(
+      slivers: [
+        for (final group in groups) ...[
+          SliverToBoxAdapter(child: _buildGroupHeader(group)),
+          if (_expanded.contains(group.category)) _buildGroupList(group),
+        ],
+        _listEndSpace,
+      ],
+    );
+  }
+
+  /// keeps the last workout clear of the FAB
+  static const _listEndSpace = SliverToBoxAdapter(child: SizedBox(height: 80));
+
+  Widget _buildGroupHeader(WorkoutGroup group) {
+    final expanded = _expanded.contains(group.category);
+    final containsNext =
+        group.workouts.any((w) => w.title == nextWorkoutToHighlight);
+    return ListTile(
+      key: Key('category:${group.category}'),
+      leading: Icon(
+        expanded ? Icons.folder_open : Icons.folder,
+        color: containsNext ? Colors.amber.shade600 : null,
+      ),
+      title: Text(
+        group.category.isEmpty ? S.of(context).uncategorized : group.category,
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('${group.workouts.length}'),
+          Icon(expanded ? Icons.expand_less : Icons.expand_more),
+        ],
+      ),
+      onTap: () => setState(() {
+        if (!_expanded.remove(group.category)) _expanded.add(group.category);
+      }),
+      onLongPress: group.category.isEmpty
+          ? null
+          : () => _renameCategory(context, group.category),
+    );
+  }
+
+  Widget _buildGroupList(WorkoutGroup group) => SliverReorderableList(
+        itemCount: group.workouts.length,
+        itemBuilder: (context, index) =>
+            _buildWorkoutItem(group.workouts[index], index),
+        proxyDecorator: (child, index, animation) =>
+            Material(elevation: 6, color: Colors.transparent, child: child),
         onReorder: (oldIndex, newIndex) {
           if (oldIndex < newIndex) {
             newIndex -= 1;
           }
           setState(() {
-            var workout = workouts.removeAt(oldIndex);
-            workouts.insert(newIndex, workout);
+            var workout = group.workouts.removeAt(oldIndex);
+            group.workouts.insert(newIndex, workout);
+            workouts = WorkoutGroups.flatten(groups);
           });
           _saveSorting();
         },
-        children: workouts.map(_buildWorkoutItem).toList(),
       );
 
-  Widget _buildWorkoutItem(Workout workout) {
+  Widget _buildWorkoutItem(Workout workout, int index) {
     final isNextWorkout = nextWorkoutToHighlight == workout.title;
     return Card(
       key: Key(workout.toJson().toString()),
@@ -167,7 +267,7 @@ class HomePageState extends State<HomePage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: ReorderableDragStartListener(
-              index: workout.position,
+              index: index,
               child: const Icon(Icons.drag_handle),
             ),
           ),
@@ -188,8 +288,11 @@ class HomePageState extends State<HomePage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      BuilderPage(workout: workout, newWorkout: false),
+                  builder: (context) => BuilderPage(
+                    workout: workout,
+                    newWorkout: false,
+                    categories: _categories,
+                  ),
                 ),
               ).then((value) => _loadWorkouts());
             },
@@ -267,6 +370,7 @@ class HomePageState extends State<HomePage> {
                 builder: (context) => BuilderPage(
                   workout: Workout(),
                   newWorkout: true,
+                  categories: _categories,
                 ),
               ),
             ).then((value) => _loadWorkouts());

@@ -11,6 +11,7 @@ import '../utils/workout.dart';
 import 'history_helper.dart';
 import 'migrations.dart';
 import 'utils.dart';
+import 'workout_groups.dart';
 
 Future<Map<String, dynamic>> _dumpSettings() async {
   final prefs = await SharedPreferences.getInstance();
@@ -127,6 +128,7 @@ Future<int> importFile(bool fromBackup, {ImportMode mode = ImportMode.merge}) as
         for (var w in backup.workouts) {
           if (!await workoutExists(w.title)) toImport.add(w);
         }
+        WorkoutGroups.appendPositions(await getAllWorkouts(), toImport);
       }
       await Future.wait(toImport.map(writeWorkout));
       if (backup.history != null) {
@@ -140,6 +142,7 @@ Future<int> importFile(bool fromBackup, {ImportMode mode = ImportMode.merge}) as
       return Future.value(toImport.length);
     } else {
       var workout = Workout.fromJson(jsonDecode(content));
+      WorkoutGroups.appendPositions(await getAllWorkouts(), [workout]);
       writeWorkout(workout, fixDuplicates: true);
       return Future.value(1);
     }

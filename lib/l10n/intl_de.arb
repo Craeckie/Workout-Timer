@@ -169,5 +169,13 @@
   "theme_system": "System",
   "@theme_system": {},
   "shareWorkout": "Workout teilen",
-  "@shareWorkout": {}
+  "@shareWorkout": {},
+  "category": "Kategorie",
+  "@category": {},
+  "uncategorized": "Sonstige",
+  "@uncategorized": {},
+  "renameCategory": "Kategorie umbenennen",
+  "@renameCategory": {},
+  "rename": "Umbenennen",
+  "@rename": {}
 }

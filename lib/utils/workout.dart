@@ -5,13 +5,14 @@ part '../workout.g.dart';
 
 @JsonSerializable(explicitToJson: true)
 class Workout {
-  static const fileVersion = 2;
+  static const fileVersion = 3;
 
   Workout({
     this.title = 'Workout',
     List<Set>? sets,
     this.version = fileVersion,
     this.position = -1,
+    this.category = '',
   }) {
     this.sets = sets ?? [Set()];
   }
@@ -26,6 +27,10 @@ class Workout {
 
   @JsonKey(defaultValue: -1)
   int position;
+
+  /// Section on the home page; empty for uncategorized workouts.
+  @JsonKey(defaultValue: '')
+  String category;
 
   int get duration {
     var duration = 0;

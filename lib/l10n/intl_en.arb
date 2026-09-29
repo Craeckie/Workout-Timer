@@ -116,5 +116,9 @@
     "theme_dark": "Dark",
     "theme_light": "Light",
     "theme_system": "System",
-    "theme_black": "Black (OLED)"
+    "theme_black": "Black (OLED)",
+    "category": "Category",
+    "uncategorized": "Other",
+    "renameCategory": "Rename category",
+    "rename": "Rename"
 }

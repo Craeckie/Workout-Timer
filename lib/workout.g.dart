@@ -15,6 +15,7 @@ Workout _$WorkoutFromJson(Map<String, dynamic> json) {
         .toList(),
     version: (json['version'] as num?)?.toInt() ?? 1,
     position: (json['position'] as num?)?.toInt() ?? -1,
+    category: json['category'] as String? ?? '',
   );
 }
 
@@ -23,6 +24,7 @@ Map<String, dynamic> _$WorkoutToJson(Workout instance) => <String, dynamic>{
   'sets': instance.sets.map((e) => e.toJson()).toList(),
   'version': instance.version,
   'position': instance.position,
+  'category': instance.category,
 };
 
 Set _$SetFromJson(Map<String, dynamic> json) {

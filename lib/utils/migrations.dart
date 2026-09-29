@@ -3,6 +3,7 @@ import 'dart:io';
 import 'storage_helper.dart';
 import 'utils.dart';
 import '../utils/workout.dart';
+import 'workout_groups.dart';
 
 class Migrations {
   static late List<Workout> _workouts;
@@ -22,7 +23,10 @@ class Migrations {
     while (workout.version < Workout.fileVersion) {
       switch (workout.version) {
         case 1:
-          _migrateV1toV2(workout, index);
+          await _migrateV1toV2(workout, index);
+          break;
+        case 2:
+          await _migrateV2toV3(workout);
           break;
       }
     }
@@ -32,6 +36,16 @@ class Migrations {
     workout.version = 2;
     if (workout.position == -1) {
       workout.position = index;
+    }
+    writeWorkout(workout);
+  }
+
+  /// Workouts named after the B/F programmes get their category from the
+  /// title prefix; everything else stays uncategorized.
+  static Future<void> _migrateV2toV3(Workout workout) async {
+    workout.version = 3;
+    if (workout.category.isEmpty) {
+      workout.category = WorkoutGroups.categoryFromTitle(workout.title);
     }
     writeWorkout(workout);
   }
