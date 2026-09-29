@@ -91,7 +91,6 @@ void main() {
   test('migration v2 → v3 fills categories from titles', () async {
     writeV2Workouts(titles);
     await Migrations.runMigrations();
-    await settle();
     final categories = {
       for (final t in titles)
         t: Workout.fromJson(

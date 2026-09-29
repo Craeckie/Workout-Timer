@@ -47,7 +47,7 @@ class Migrations {
     if (workout.category.isEmpty) {
       workout.category = WorkoutGroups.categoryFromTitle(workout.title);
     }
-    writeWorkout(workout);
+    await writeWorkout(workout);
   }
 
   static Future<void> runMigrations() async {
