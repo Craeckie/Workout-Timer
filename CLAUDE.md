@@ -74,57 +74,33 @@ Current pinned versions (in `android/`):
 
 ## Release
 
-Releases are triggered by pushing a `v*` tag. When the user says **"Create a release"**, follow these steps:
+Releasing is a version bump: CI (`.github/workflows/release.yml`) creates tag `vX.Y.Z` and the
+GitHub release with both signed split-per-ABI APKs. **Never push tags or run
+`gh release create` by hand.** Shared convention: workspace `templates/README.md`, "Releasing
+(Android)". When the user says **"Create a release"**:
 
-1. **Find the last tag** (or note if none exist yet):
-   ```
-   git describe --tags --abbrev=0 2>/dev/null || echo "(no tags yet)"
-   ```
-2. **Summarize commits** since that tag (or since the fork point `02c292b` for the first release):
-   ```
-   git log <last-tag>..HEAD --oneline
-   # or for first release:
-   git log 02c292b..HEAD --oneline
-   ```
-3. **Draft release notes** — group changes into New Features, Fixes, and Under the Hood. Use emojis where they add meaning.
-4. **Ask** the user: minor bump or patch bump? (major only for breaking changes)
-5. **Bump the version** in `pubspec.yaml` (`version: 'X.Y.Z'`). Keep build number absent or as-is.
-6. **Prepend an entry** to `CHANGELOG.md` with the version, date, and the release notes.
-7. **Commit** the version bump and changelog:
-   ```
-   git commit -m "chore: release vX.Y.Z"
-   ```
-8. **Tag and push**:
-   ```
-   git tag vX.Y.Z
-   git push && git push --tags
-   ```
-9. **Create the GitHub Release** before the tag push triggers the upload step (CI does `gh release upload`, not `create`):
-   ```
-   gh release create vX.Y.Z --title "vX.Y.Z" --notes "..."
-   ```
-   CI will then build, sign, and attach the APKs automatically.
+1. **Summarize commits** since the last tag: `git log $(git describe --tags --abbrev=0)..HEAD --oneline`.
+2. **Pick the bump**: minor if any `feat:` commit is in that range, else patch (major only for
+   breaking changes).
+3. **Bump `version:` in `pubspec.yaml`** to `'X.Y.Z+N'`. `N` is the versionCode and must be
+   greater than the last release's (CI refuses otherwise). Releases up to v2.3.0 had no `+N`,
+   so Flutter built them with `N` = 1. The APK's versionCode adds a per-ABI offset
+   (arm64 `2000+N`, armv7 `1000+N`), so comparing `N` is enough.
+4. **Prepend a `CHANGELOG.md` entry** `# [X.Y.Z](…/releases/tag/vX.Y.Z) (date)`, grouped into
+   New Features, Fixes and Under the Hood, with emojis where they add meaning. CI extracts it
+   by that header as the release notes and falls back to generated notes if it's missing.
+5. **Commit** `chore: release vX.Y.Z` and **push `main`**. A push that doesn't change the
+   version is a no-op; `workflow_dispatch` re-runs a failed release of the current version.
 
-CI on every non-tag push (`CI.yml`) runs analyze + test + debug build for smoke-testing branches before tagging.
+CI on every push (`CI.yml`) runs analyze + test + debug build. Signing uses the
+`KEYSTORE_BASE64` / `KEYSTORE_PASSWORD` repo secrets with the workspace keystore's alias
+`my-key` (hardcoded); the `KEY_ALIAS` secret is unused.
 
 ### Local `release.sh` speed tips
 
 - `./release.sh <keystore-password>` runs the full `scr build` codegen pipeline first. After `.arb`/schema/asset/`pubspec.yaml` changes, that's what you want.
 - For repeat builds with no codegen-input changes, use `./release.sh --skip-codegen <keystore-password>` — saves the five Dart-VM cold starts.
 - Do **not** run `flutter clean` between builds unless a plugin version changed; it wipes the 2–3 GB Kotlin/dex/R8 cache and forces a from-scratch rebuild.
-
-### Signing keystore (one-time setup per fork)
-
-```
-keytool -genkeypair -v -keystore release.jks -keyalg RSA -keysize 2048 \
-        -validity 10000 -alias key
-base64 -w0 release.jks      # paste into the SIGNING_KEY repo secret
-                            # store the keystore password in SIGNING_KEY_PASSWORD
-```
-
-Both the keystore alias (hard-coded as `key` in `release.yml`) and the
-`r0adkll/sign-android-release` action use a single password for both the
-keystore and the key — generate the keystore accordingly.
 
 `release.sh` is the local-dev equivalent and re-signs the build output with
 `apksigner` from a checked-out keystore (`../my-debug.jks`); it is not used
