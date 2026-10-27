@@ -1,3 +1,24 @@
+# [2.4.0](https://github.com/Craeckie/Workout-Timer/releases/tag/v2.4.0) (2026-10-27)
+
+### ✨ New Features
+
+* 🗂️ **Workout categories** — Workouts can now have a category, and the home page shows one collapsible section per category. On start only the category of your next workout is open. Long-press a section header to rename it. Existing workouts with Beginner/First Class title prefixes are sorted into categories automatically.
+* ⏭️ **Next workout per category** — The highlighted next workout is now the one after your last completed workout *within its category*.
+* 📊 **Split progress bars** — The runner shows time left in the current exercise at the top and overall workout progress in the bottom bar.
+
+### 🐛 Fixes
+
+* 📱 The runner's bottom bar no longer renders under the gesture-navigation area or gets clipped.
+* 📥 Merging an imported backup appends the imported workouts after your existing ones instead of interleaving them.
+* 💾 Saving a workout now waits until the file is actually written, which fixes a race during backup import and migration.
+
+### 🔧 Under the Hood
+
+* Replaced deprecated Flutter widgets (`WillPopScope`, `ButtonBar`, `onPopInvoked`).
+* Releases are now created by CI from the version in `pubspec.yaml`; APKs carry a real, increasing versionCode.
+
+---
+
 # [2.2.0](https://github.com/Craeckie/just_another_workout_timer/releases/tag/v2.2.0) (2026-07-09)
 
 ### ✨ New Features
